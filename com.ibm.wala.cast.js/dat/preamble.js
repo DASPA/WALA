@@ -133,11 +133,11 @@ DOMNode = function DOMNode() { // An impostor for the Node class
         
         this.selectNodes = function(a) {
 	}
+
+	this.addEventListener = function Node_prototype_addEventListener(name, fn) { fn(); };
+
+	this.removeEventListener = function Node_prototype_removeEventListener(name) {};
 };
-
-DOMNode.prototype.addEventListener = function Node_prototype_addEventListener(name, fn) { fn(); };
-
-DOMNode.prototype.removeEventListener = function Node_prototype_removeEventListener(name) {};
 
 DOMNode.prototype.cloneNode = function Node_prototype_cloneNode() {
 	// TODO: model me
