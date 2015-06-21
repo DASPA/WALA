@@ -87,7 +87,9 @@ public class DomLessSourceExtractor extends JSSourceExtractor {
     
     @Override
     public void handleEndTag(ITag tag) {
-      if (tag.getName().equalsIgnoreCase("script")) {
+      if (tag.getName().equalsIgnoreCase("script")
+          && (tag.getAttributeByName("type") == null
+              || tag.getAttributeByName("type").fst.equals("text/javascript"))) {
         assert currentScriptTag != null;
         currentScriptTag = null;
       } else if (currentScriptTag != null && tag.getName().equals("!--")) {
@@ -118,7 +120,9 @@ public class DomLessSourceExtractor extends JSSourceExtractor {
 
     @Override
     public void handleStartTag(ITag tag) {
-      if (tag.getName().equalsIgnoreCase("script")) {
+      if (tag.getName().equalsIgnoreCase("script")
+          && (tag.getAttributeByName("type") == null
+              || tag.getAttributeByName("type").fst.equals("text/javascript"))) {
         handleScript(tag);
         assert currentScriptTag == null;
         currentScriptTag = tag;
