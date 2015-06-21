@@ -10,21 +10,28 @@
  *******************************************************************************/
 package com.ibm.wala.cast.js.translator;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.URL;
 
+import org.apache.commons.io.FileUtils;
+
 import com.ibm.wala.cast.tree.CAstSourcePositionMap.Position;
 import com.ibm.wala.cast.tree.impl.AbstractSourcePosition;
 
 public class RangePosition extends AbstractSourcePosition implements Position {
+  private final static int NUMBER_OF_CHARS_IN_TAB = 4;
   private final URL url;
   private final int line;
   private final int startOffset;
   private final int endOffset;
-  
-  
+
+  private int col = -1;
+  private int lastLine = -1;
+  private int lastCol = -1;
+
   public RangePosition(URL url, int line, int startOffset, int endOffset) {
     super();
     this.url = url;
@@ -50,17 +57,59 @@ public class RangePosition extends AbstractSourcePosition implements Position {
 
   @Override
   public int getLastLine() {
-    return -1;
+    if (lastLine == -1) {
+      String content;
+      try {
+        content = FileUtils.readFileToString(new File(url.getFile())).substring(startOffset, endOffset);
+      } catch (IOException e) {
+        e.printStackTrace();
+        return -1;
+      }
+
+      int nrOfNewlines = content.length() - content.replace("\n", "").length();
+
+      lastLine = line + nrOfNewlines;
+    }
+
+    return lastLine;
   }
 
   @Override
   public int getFirstCol() {
-    return -1;
+    if (col == -1) {
+      col = getCol(getFirstLine(), startOffset);
+    }
+
+    return col;
   }
 
   @Override
   public int getLastCol() {
-    return -1;
+    if (lastCol == -1) {
+      lastCol = getCol(getLastLine(), endOffset);
+    }
+
+    return lastCol;
+  }
+
+  private int getCol(int line, int offset) {
+    String content;
+    try {
+      content = FileUtils.readFileToString(new File(url.getFile()));
+    } catch (IOException e) {
+      e.printStackTrace();
+      return -1;
+    }
+
+    int pos = -1;
+    for (int i = 0; i < line - 1; i++) {
+      pos = content.indexOf('\n', pos + 1);
+    }
+
+    String lineBeginning = content.substring(pos, offset);
+    int nrOfTabs = lineBeginning.length() - lineBeginning.replace("\t", "").length();
+
+    return offset - pos + (NUMBER_OF_CHARS_IN_TAB - 1) * nrOfTabs;
   }
 
   @Override
