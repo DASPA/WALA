@@ -91,7 +91,7 @@ public class FieldBasedCGUtil {
 	  return buildCG(loaders, scripts, builderType, monitor, supportFullPointerAnalysis);
 	}
 
-	public Pair<JSCallGraph, PointerAnalysis<ObjectVertex>> buildCG(JavaScriptLoaderFactory loaders, SourceModule[] scripts, BuilderType builderType, IProgressMonitor monitor, boolean supportFullPointerAnalysis) throws IOException, WalaException, CancelException  {
+	public static Pair<JSCallGraph, PointerAnalysis<ObjectVertex>> buildCG(JavaScriptLoaderFactory loaders, SourceModule[] scripts, BuilderType builderType, IProgressMonitor monitor, boolean supportFullPointerAnalysis) throws IOException, WalaException, CancelException  {
 		CAstAnalysisScope scope = new CAstAnalysisScope(scripts, loaders, Collections.singleton(JavaScriptLoader.JS));
 		IClassHierarchy cha = ClassHierarchy.make(scope, loaders, JavaScriptLoader.JS);
 		Util.checkForFrontEndErrors(cha);
