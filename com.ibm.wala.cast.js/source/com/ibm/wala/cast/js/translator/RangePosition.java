@@ -93,6 +93,9 @@ public class RangePosition extends AbstractSourcePosition implements Position {
   }
 
   private int getCol(int line, int offset) {
+    if (line == 1) {
+      return offset + 1;
+    }
     String content;
     try {
       content = FileUtils.readFileToString(new File(url.getFile()));
