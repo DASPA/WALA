@@ -58,11 +58,22 @@ public class RangePosition extends AbstractSourcePosition implements Position {
   public int getLastLine() {
     if (lastLine == -1) {
       String content;
+      Reader reader = null;
       try {
-        content = IOUtils.toString(getReader()).substring(startOffset, endOffset);
+        reader = getReader();
+        content = IOUtils.toString(reader).substring(startOffset, endOffset);
       } catch (IOException e) {
         e.printStackTrace();
         return -1;
+      } finally {
+        if (reader != null) {
+          try {
+            reader.close();
+          } catch (IOException e) {
+            e.printStackTrace();
+            return -1;
+          }
+        }
       }
 
       int nrOfNewlines = content.length() - content.replace("\n", "").length();
@@ -96,11 +107,22 @@ public class RangePosition extends AbstractSourcePosition implements Position {
       return offset + 1;
     }
     String content;
+    Reader reader = null;
     try {
-      content = IOUtils.toString(getReader());
+      reader = getReader();
+      content = IOUtils.toString(reader);
     } catch (IOException e) {
       e.printStackTrace();
       return -1;
+    } finally {
+      if (reader != null) {
+        try {
+          reader.close();
+        } catch (IOException e) {
+          e.printStackTrace();
+          return -1;
+        }
+      }
     }
 
     int pos = -1;
