@@ -75,7 +75,7 @@ public abstract class FieldBasedCallGraphBuilder {
 	protected final MethodTargetSelector targetSelector;
 	protected final boolean supportFullPointerAnalysis;
 	
-	private static final boolean LOG_TIMINGS = true;
+	private static final boolean LOG_TIMINGS = false;
 	
 	public FieldBasedCallGraphBuilder(IClassHierarchy cha, AnalysisOptions options, AnalysisCache cache, boolean supportFullPointerAnalysis) {
 		this.cha = cha;
