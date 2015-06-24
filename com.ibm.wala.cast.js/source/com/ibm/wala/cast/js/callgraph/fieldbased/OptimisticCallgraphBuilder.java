@@ -126,7 +126,7 @@ public class OptimisticCallgraphBuilder extends FieldBasedCallGraphBuilder {
 
 	  VarVertex receiverVertex = factory.makeVarVertex(caller, invk.getUse(1));
 	  OrdinalSet<FuncVertex> realCallees = flowgraph.getReachingSet(receiverVertex, monitor);
-	  System.err.println("callees " + realCallees + " for " + caller);
+//	  System.err.println("callees " + realCallees + " for " + caller);
 	  for(FuncVertex realCallee: realCallees) {
 	    // flow from arguments to parameters
 	    for(int i=2;i<invk.getNumberOfParameters();++i)

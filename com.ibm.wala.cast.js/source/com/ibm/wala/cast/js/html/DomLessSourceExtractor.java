@@ -247,7 +247,7 @@ public class DomLessSourceExtractor extends JSSourceExtractor {
             ByteOrderMark.UTF_16LE, ByteOrderMark.UTF_16BE,
             ByteOrderMark.UTF_32LE, ByteOrderMark.UTF_32BE);
         if (bs.hasBOM()) {
-          System.err.println("removing BOM " + bs.getBOM());
+//          System.err.println("removing BOM " + bs.getBOM());
         }
         scriptInputStream = new InputStreamReader(bs);
       } catch (Exception e) {

@@ -68,7 +68,7 @@ public class CAstCallGraphUtil {
             ByteOrderMark.UTF_32LE, ByteOrderMark.UTF_32BE);
         try {
           if (bs.hasBOM()) {
-            System.err.println("removing BOM " + bs.getBOM());
+//            System.err.println("removing BOM " + bs.getBOM());
           }
           return bs;
         } catch (IOException e) {
