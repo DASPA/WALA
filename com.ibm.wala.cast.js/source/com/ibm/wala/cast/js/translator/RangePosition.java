@@ -10,13 +10,12 @@
  *******************************************************************************/
 package com.ibm.wala.cast.js.translator;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.URL;
 
-import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 
 import com.ibm.wala.cast.tree.CAstSourcePositionMap.Position;
 import com.ibm.wala.cast.tree.impl.AbstractSourcePosition;
@@ -60,7 +59,7 @@ public class RangePosition extends AbstractSourcePosition implements Position {
     if (lastLine == -1) {
       String content;
       try {
-        content = FileUtils.readFileToString(new File(url.getFile())).substring(startOffset, endOffset);
+        content = IOUtils.toString(getReader()).substring(startOffset, endOffset);
       } catch (IOException e) {
         e.printStackTrace();
         return -1;
@@ -98,7 +97,7 @@ public class RangePosition extends AbstractSourcePosition implements Position {
     }
     String content;
     try {
-      content = FileUtils.readFileToString(new File(url.getFile()));
+      content = IOUtils.toString(getReader());
     } catch (IOException e) {
       e.printStackTrace();
       return -1;
