@@ -452,4 +452,10 @@ public class FakeExceptionTypeBinding implements ITypeBinding {
     return null;
   }
 
+  @Override
+  public IBinding getDeclaringMember() {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
 }
