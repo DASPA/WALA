@@ -11,6 +11,13 @@
 	<groupId>com.ibm.wala</groupId>
 	<artifactId>com.ibm.wala.cast.js</artifactId>
 	<packaging>eclipse-plugin</packaging>
+	<dependencies>
+		<dependency>
+			<groupId>net.htmlparser.jericho</groupId>
+			<artifactId>jericho-html</artifactId>
+			<version>3.2</version>
+		</dependency>
+	</dependencies>
 	<build>
                <plugins>
                     <plugin>
