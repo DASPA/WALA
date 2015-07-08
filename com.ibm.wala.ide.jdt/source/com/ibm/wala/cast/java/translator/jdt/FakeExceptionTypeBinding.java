@@ -452,7 +452,7 @@ public class FakeExceptionTypeBinding implements ITypeBinding {
     return null;
   }
 
-  @Override
+  // I guess the comments above apply here as well...
   public IBinding getDeclaringMember() {
     // TODO Auto-generated method stub
     return null;
