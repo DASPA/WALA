@@ -57,14 +57,14 @@ public class JerichoTag implements ITag {
 
 	      @Override
 	      public int getFirstCol() {
-	        return -1;
-	        // return e.getSource().getRowColumnVector(e.getBegin()).getColumn();
+//	        return -1;
+	         return e.getSource().getRowColumnVector(e.getBegin()).getColumn();
 	      }
 
 	      @Override
 	      public int getLastCol() {
-	        return -1;
-	        //return e.getSource().getRowColumnVector(e.getEnd()).getColumn();
+//	        return -1;
+	        return e.getSource().getRowColumnVector(e.getEnd()).getColumn();
 	      }
 
 	      @Override
