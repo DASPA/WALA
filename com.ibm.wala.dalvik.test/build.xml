@@ -44,14 +44,6 @@
    <target name="fetchSampleLex" depends="sampleLexPresent" unless="sample.lex.present">
      <get src="https://www.cs.princeton.edu/~appel/modern/java/JLex/current/sample.lex" dest="${plugin.destination}/data/sample.lex" />
    </target>
-	
-   <target name="fetchSampleCup" depends="sampleCupPresent" unless="sample.cup.present">
-     <get src="http://casper.cii.saxion.nl:8083/~vanleeuw/pse/spanje/troff2html.cup" dest="${plugin.destination}/data/troff2html.cup" />
-   </target>
-
-   <target name="sampleCupPresent" depends="init">
-     <available file="${plugin.destination}/data/troff2html.cup" property="sample.cup.present"/>
-   </target>
 
       <target name="fetchAndroidJar" depends="androidJarPresent" unless="android.jar.present">
      <get src="http://central.maven.org/maven2/com/google/android/android/4.1.1.4/android-4.1.1.4.jar" dest="${plugin.destination}/data/android.jar" />
@@ -69,7 +61,7 @@
      <available file="${basedir}/lib/dx.jar" property="dx.jar.present"/>
    </target>
 
-   <target name="getJars" depends="fetchSampleLex,fetchSampleCup,fetchAndroidJar,copyDxJar" />
+   <target name="getJars" depends="fetchSampleLex,fetchAndroidJar,copyDxJar" />
 
 	<target name="init" depends="properties">
 		<condition property="pluginTemp" value="${buildTempFolder}/plugins">
