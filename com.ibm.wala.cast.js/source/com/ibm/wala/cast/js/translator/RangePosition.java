@@ -113,16 +113,10 @@ public class RangePosition extends AbstractSourcePosition implements Position {
       content = IOUtils.toString(reader);
     } catch (IOException e) {
       e.printStackTrace();
+      IOUtils.closeQuietly(reader);
       return -1;
     } finally {
-      if (reader != null) {
-        try {
-          reader.close();
-        } catch (IOException e) {
-          e.printStackTrace();
-          return -1;
-        }
-      }
+      IOUtils.closeQuietly(reader);
     }
 
     int pos = -1;
@@ -130,10 +124,16 @@ public class RangePosition extends AbstractSourcePosition implements Position {
       pos = content.indexOf('\n', pos + 1);
     }
 
-    String lineBeginning = content.substring(pos, offset);
-    int nrOfTabs = lineBeginning.length() - lineBeginning.replace("\t", "").length();
+    try {
+      String lineBeginning = content.substring(pos, offset);
+      int nrOfTabs = lineBeginning.length() - lineBeginning.replace("\t", "").length();
 
-    return offset - pos + (NUMBER_OF_CHARS_IN_TAB - 1) * nrOfTabs;
+      return offset - pos + (NUMBER_OF_CHARS_IN_TAB - 1) * nrOfTabs;
+    } catch (StringIndexOutOfBoundsException e) {
+      System.err.println("Could not determine column for file " + getURL() + " (" +
+        getFirstOffset() + " -> " + getLastOffset() + ", line " + line + ", offset " + offset);
+      return -1;
+    }
   }
 
   @Override
