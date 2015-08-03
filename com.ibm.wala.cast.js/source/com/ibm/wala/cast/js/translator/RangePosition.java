@@ -103,22 +103,24 @@ public class RangePosition extends AbstractSourcePosition implements Position {
   }
 
   private int getCol(int line, int offset) {
-    if (line == 1) {
-      return offset + 1;
-    }
-    String content;
+    int col = -1;
     Reader reader = null;
     try {
-      reader = getReader();
-      content = IOUtils.toString(reader);
+       reader = getReader();
+      col = getCol(IOUtils.toString(reader), line, offset);
     } catch (IOException e) {
       e.printStackTrace();
-      IOUtils.closeQuietly(reader);
-      return -1;
     } finally {
       IOUtils.closeQuietly(reader);
     }
 
+    return col;
+  }
+
+  public static int getCol(String content, int line, int offset) {
+    if (line == 1) {
+      return offset + 1;
+    }
     int pos = -1;
     for (int i = 0; i < line - 1; i++) {
       pos = content.indexOf('\n', pos + 1);
@@ -130,8 +132,7 @@ public class RangePosition extends AbstractSourcePosition implements Position {
 
       return offset - pos + (NUMBER_OF_CHARS_IN_TAB - 1) * nrOfTabs;
     } catch (StringIndexOutOfBoundsException e) {
-      System.err.println("Could not determine column for file " + getURL() + " (" +
-        getFirstOffset() + " -> " + getLastOffset() + ", line " + line + ", offset " + offset);
+      System.err.println("Could not determine column!");
       return -1;
     }
   }
