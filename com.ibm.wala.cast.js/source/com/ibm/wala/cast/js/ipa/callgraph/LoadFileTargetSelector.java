@@ -34,6 +34,7 @@ import com.ibm.wala.types.MethodReference;
 import com.ibm.wala.types.TypeName;
 import com.ibm.wala.types.TypeReference;
 import com.ibm.wala.util.collections.HashSetFactory;
+import com.ibm.wala.util.debug.UnimplementedError;
 import com.ibm.wala.util.intset.OrdinalSet;
 
 public class LoadFileTargetSelector implements MethodTargetSelector {
@@ -55,7 +56,13 @@ public class LoadFileTargetSelector implements MethodTargetSelector {
       
       Set<String> names = new HashSet<String>();
       SSAInstruction call = caller.getIR().getInstructions()[caller.getIR().getCallInstructionIndices(site).intIterator().next()];
-      LocalPointerKey fileNameV = new LocalPointerKey(caller, call.getUse(1));
+      LocalPointerKey fileNameV = null;
+      try {
+        fileNameV = new LocalPointerKey(caller, call.getUse(1));
+      } catch (UnsupportedOperationException e) {
+        e.printStackTrace();
+        return target;
+      }
       OrdinalSet<InstanceKey> ptrs = builder.getPointerAnalysis().getPointsToSet(fileNameV);
       for(InstanceKey k : ptrs) {
         if (k instanceof ConstantKey) {
