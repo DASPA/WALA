@@ -426,11 +426,11 @@ public abstract class SSAPropagationCallGraphBuilder extends PropagationCallGrap
   protected static boolean hasUniqueCatchBlock(SSAAbstractInvokeInstruction call, IR ir) {
     ISSABasicBlock[] bb = ir.getBasicBlocksForCall(call.getCallSite());
     if (bb.length == 1) {
-      Iterator it = ir.getControlFlowGraph().getExceptionalSuccessors(bb[0]).iterator();
+      Iterator<ISSABasicBlock> it = ir.getControlFlowGraph().getExceptionalSuccessors(bb[0]).iterator();
       // check that there's exactly one element in the iterator
-      if (it.hasNext()) {
-        it.next();
-        return (!it.hasNext());
+      if (it.hasNext())  {
+        ISSABasicBlock sb = it.next();
+        return (!it.hasNext() && (sb.isExitBlock() || ((sb instanceof ExceptionHandlerBasicBlock) && ((ExceptionHandlerBasicBlock)sb).getCatchInstruction() != null)));
       }
     }
     return false;
@@ -952,7 +952,7 @@ public abstract class SSAPropagationCallGraphBuilder extends PropagationCallGrap
       }
     }
 
-    private void processPutField(int rval, int ref, IField f) {
+    public void processPutField(int rval, int ref, IField f) {
       assert !f.getFieldTypeReference().isPrimitiveType();
       PointerKey refKey = getPointerKeyForLocal(ref);
       PointerKey rvalKey = getPointerKeyForLocal(rval);
@@ -999,7 +999,7 @@ public abstract class SSAPropagationCallGraphBuilder extends PropagationCallGrap
       }
     }
 
-    private void processPutStatic(int rval, FieldReference field, IField f) {
+    protected void processPutStatic(int rval, FieldReference field, IField f) {
       PointerKey fKey = getPointerKeyForStaticField(f);
       PointerKey rvalKey = getPointerKeyForLocal(rval);
 
@@ -1436,7 +1436,7 @@ public abstract class SSAPropagationCallGraphBuilder extends PropagationCallGrap
      * 
      * Add a call to the class initializer from the root method.
      */
-    private void processClassInitializer(IClass klass) {
+    protected void processClassInitializer(IClass klass) {
 
       assert klass != null;
 
