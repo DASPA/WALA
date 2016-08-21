@@ -264,8 +264,8 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <version>2.14.1</version>
       </plugin>		
-    </plugins>
-  </build>
+</plugins>
+</build>
 <pluginRepositories>
   <pluginRepository>
     <id>sonatype-public-repository</id>
