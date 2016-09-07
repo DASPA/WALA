@@ -14,7 +14,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.URL;
-
 import org.apache.commons.io.IOUtils;
 
 import com.ibm.wala.cast.tree.CAstSourcePositionMap.Position;
@@ -62,23 +61,6 @@ public class RangePosition extends AbstractSourcePosition implements Position {
   @Override
   public int getLastLine() {
     return endLine;
-    /*
-    if (lastLine == -1) {
-      String content;
-      Reader reader = null;
-      try {
-        reader = getReader();
-        content = IOUtils.toString(reader).substring(startOffset, endOffset);
-        int nrOfNewlines = content.length() - content.replace("\n", "").length();
-        lastLine = startLine + nrOfNewlines;
-      } catch (IOException e) {
-        e.printStackTrace();
-      } finally {
-        IOUtils.closeQuietly(reader);
-      }
-    }
-
-    return lastLine;  */
   }
 
   @Override
