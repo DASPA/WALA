@@ -249,7 +249,7 @@ public class DomLessSourceExtractor extends JSSourceExtractor {
       }
     }
 
-    protected void getScriptFromUrl(String urlAsString, ITag scriptTag) throws IOException, MalformedURLException {
+    private void getScriptFromUrl(String urlAsString, ITag scriptTag) throws IOException, MalformedURLException {
       URL scriptSrc = new URL(entrypointUrl, urlAsString);
       Reader scriptInputStream;
       try {
