@@ -87,7 +87,6 @@ import com.ibm.wala.ipa.callgraph.propagation.PointerKey;
 import com.ibm.wala.ipa.callgraph.propagation.SSAPropagationCallGraphBuilder;
 import com.ibm.wala.ipa.cfg.BasicBlockInContext;
 import com.ibm.wala.ipa.cha.ClassHierarchy;
-import com.ibm.wala.ssa.IRFactory;
 import com.ibm.wala.ssa.ISSABasicBlock;
 import com.ibm.wala.ssa.SSACFG;
 import com.ibm.wala.ssa.SSACFG.BasicBlock;
@@ -145,12 +144,14 @@ public class CGAnalysisContext<E extends ISSABasicBlock> {
 		}
 		analysisOptions.setReflectionOptions(options.getReflectionOptions());
 
-		AnalysisCache cache = new AnalysisCacheImpl((IRFactory<IMethod>) new DexIRFactory());
+		AnalysisCache cache = new AnalysisCacheImpl(new DexIRFactory());
 
 		SSAPropagationCallGraphBuilder cgb;
 
 		if (null != options.getSummariesURI()) {
-			extraSummaries.add(new FileInputStream(new File(options.getSummariesURI())));
+			try (final FileInputStream in = new FileInputStream(new File(options.getSummariesURI()))) {
+				extraSummaries.add(in);
+			}
 		}
 
 		cgb = AndroidAnalysisContext.makeZeroCFABuilder(analysisOptions, cache,	cha, scope,
@@ -203,7 +204,7 @@ public class CGAnalysisContext<E extends ISSABasicBlock> {
 			}
 		});
 		if (options.includeLibrary()) {
-			graph = (ISupergraph) ICFGSupergraph.make(cg, cache);
+			graph = (ISupergraph) ICFGSupergraph.make(cg);
 		} else {
 
 			Collection<CGNode> nodes = HashSetFactory.make();
@@ -211,7 +212,7 @@ public class CGAnalysisContext<E extends ISSABasicBlock> {
 				nodes.add(nIter.next());
 			}
 			CallGraph pcg = PartialCallGraph.make(cg, cg.getEntrypointNodes(), nodes);
-			graph = (ISupergraph) ICFGSupergraph.make(pcg, cache);
+			graph = (ISupergraph) ICFGSupergraph.make(pcg);
 		}
 
 		oneLevelGraph = GraphSlicer.prune(cg, new Predicate<CGNode>() {

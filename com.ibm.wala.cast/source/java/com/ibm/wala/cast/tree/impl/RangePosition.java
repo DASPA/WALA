@@ -18,7 +18,7 @@ import org.apache.commons.io.IOUtils;
 
 import com.ibm.wala.cast.tree.CAstSourcePositionMap.Position;
 
-public class RangePosition extends AbstractSourcePosition implements Position {
+public class RangePosition extends AbstractSourcePosition {
   private final static int TABSIZE = 4;
   private final URL url;
   private final int startLine;

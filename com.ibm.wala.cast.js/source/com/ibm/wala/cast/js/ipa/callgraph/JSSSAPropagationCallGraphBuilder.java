@@ -44,7 +44,6 @@ import com.ibm.wala.classLoader.IMethod;
 import com.ibm.wala.classLoader.Language;
 import com.ibm.wala.fixpoint.AbstractOperator;
 import com.ibm.wala.fixpoint.UnaryOperator;
-import com.ibm.wala.ipa.callgraph.AnalysisCache;
 import com.ibm.wala.ipa.callgraph.AnalysisOptions;
 import com.ibm.wala.ipa.callgraph.CGNode;
 import com.ibm.wala.ipa.callgraph.CallGraph;
@@ -69,6 +68,7 @@ import com.ibm.wala.shrikeBT.BinaryOpInstruction;
 import com.ibm.wala.shrikeBT.IUnaryOpInstruction;
 import com.ibm.wala.ssa.DefUse;
 import com.ibm.wala.ssa.IR;
+import com.ibm.wala.ssa.IRView;
 import com.ibm.wala.ssa.SSAAbstractBinaryInstruction;
 import com.ibm.wala.ssa.SSAAbstractInvokeInstruction;
 import com.ibm.wala.ssa.SSABinaryOpInstruction;
@@ -107,6 +107,7 @@ import com.ibm.wala.util.strings.Atom;
  * reference to a global named {@link #GLOBAL_OBJ_VAR_NAME}, which is handled
  * specially in {@link JSConstraintVisitor#visitAstGlobalRead(AstGlobalRead)}.
  */
+@SuppressWarnings("javadoc")
 public class JSSSAPropagationCallGraphBuilder extends AstSSAPropagationCallGraphBuilder {
 
   public static final boolean DEBUG_LEXICAL = false;
@@ -378,7 +379,7 @@ public class JSSSAPropagationCallGraphBuilder extends AstSSAPropagationCallGraph
             S.addAll(set);
           }
         }
-        pointsToSet = new OrdinalSet<InstanceKey>(S, analysis.getInstanceKeyMapping());
+        pointsToSet = new OrdinalSet<>(S, analysis.getInstanceKeyMapping());
       }
 
       @Override
@@ -1020,13 +1021,14 @@ public class JSSSAPropagationCallGraphBuilder extends AstSSAPropagationCallGraph
     processCallingConstraintsInternal(this, caller, instruction, target, constParams, uniqueCatchKey);
   }
 
+  @SuppressWarnings("unused")
   public static void processCallingConstraintsInternal(AstSSAPropagationCallGraphBuilder builder, CGNode caller, SSAAbstractInvokeInstruction instruction, CGNode target,
       InstanceKey[][] constParams, PointerKey uniqueCatchKey) {
         
-    IR sourceIR = builder.getCFAContextInterpreter().getIR(caller);
+    IRView sourceIR = builder.getCFAContextInterpreter().getIRView(caller);
     SymbolTable sourceST = sourceIR.getSymbolTable();
 
-    IR targetIR = builder.getCFAContextInterpreter().getIR(target);
+    IRView targetIR = builder.getCFAContextInterpreter().getIRView(target);
     SymbolTable targetST = targetIR.getSymbolTable();
 
     JSConstraintVisitor targetVisitor = null;

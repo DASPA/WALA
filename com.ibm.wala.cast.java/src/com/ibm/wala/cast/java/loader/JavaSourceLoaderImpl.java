@@ -155,7 +155,7 @@ public abstract class JavaSourceLoaderImpl extends ClassLoaderImpl {
 
     @Override
     public Collection<IClass> getDirectInterfaces() {
-      List<IClass> result = new ArrayList<IClass>();
+      List<IClass> result = new ArrayList<>();
       for (Iterator iter = superTypeNames.iterator(); iter.hasNext();) {
         TypeName name = (TypeName) iter.next();
         IClass domoType = lookupClass(name);
@@ -288,15 +288,15 @@ public abstract class JavaSourceLoaderImpl extends ClassLoaderImpl {
       if (isStatic()) {
         types = new TypeReference[argCount];
         for (int i = 0; i < argCount; i++) {
-          types[i] = TypeReference.findOrCreate(JavaSourceLoaderImpl.this.getReference(), ((CAstType) type.getArgumentTypes()
-              .get(i)).getName());
+          types[i] = TypeReference.findOrCreate(JavaSourceLoaderImpl.this.getReference(), type.getArgumentTypes()
+              .get(i).getName());
         }
       } else {
         types = new TypeReference[argCount + 1];
         types[0] = cls.getReference();
         for (int i = 0; i < argCount; i++) {
-          types[i + 1] = TypeReference.findOrCreate(JavaSourceLoaderImpl.this.getReference(), ((CAstType) type.getArgumentTypes()
-              .get(i)).getName());
+          types[i + 1] = TypeReference.findOrCreate(JavaSourceLoaderImpl.this.getReference(), type.getArgumentTypes()
+              .get(i).getName());
         }
       }
 
@@ -540,7 +540,7 @@ public abstract class JavaSourceLoaderImpl extends ClassLoaderImpl {
   }
   
   public IClass defineType(CAstEntity type, String typeName, CAstEntity owner) {
-    Collection<TypeName> superTypeNames = new ArrayList<TypeName>();
+    Collection<TypeName> superTypeNames = new ArrayList<>();
     for (Iterator superTypes = type.getType().getSupertypes().iterator(); superTypes.hasNext();) {
       superTypeNames.add(toWALATypeName(((CAstType) superTypes.next())));
     }

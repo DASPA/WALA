@@ -83,7 +83,7 @@ public class SDG<T extends InstanceKey> extends AbstractNumberedGraph<Statement>
   /**
    * keeps track of PDG for each call graph node
    */
-  private final Map<CGNode, PDG> pdgMap = HashMapFactory.make();
+  private final Map<CGNode, PDG<T>> pdgMap = HashMapFactory.make();
 
   /**
    * governs data dependence edges in the graph
@@ -115,7 +115,7 @@ public class SDG<T extends InstanceKey> extends AbstractNumberedGraph<Statement>
    */
   private final HeapExclusions heapExclude;
 
-  private final ModRef modRef;
+  private final ModRef<T> modRef;
 
   /**
    * Have we eagerly populated all nodes of this SDG?
@@ -123,15 +123,15 @@ public class SDG<T extends InstanceKey> extends AbstractNumberedGraph<Statement>
   private boolean eagerComputed = false;
 
   public SDG(final CallGraph cg, PointerAnalysis<T> pa, DataDependenceOptions dOptions, ControlDependenceOptions cOptions) {
-    this(cg, pa, ModRef.make(), dOptions, cOptions, null);
+    this(cg, pa, ModRef.<T>make(), dOptions, cOptions, null);
   }
 
-  public SDG(final CallGraph cg, PointerAnalysis<T> pa, ModRef modRef, DataDependenceOptions dOptions,
+  public SDG(final CallGraph cg, PointerAnalysis<T> pa, ModRef<T> modRef, DataDependenceOptions dOptions,
       ControlDependenceOptions cOptions) {
     this(cg, pa, modRef, dOptions, cOptions, null);
   }
 
-  public SDG(CallGraph cg, PointerAnalysis<T> pa, ModRef modRef, DataDependenceOptions dOptions, ControlDependenceOptions cOptions,
+  public SDG(CallGraph cg, PointerAnalysis<T> pa, ModRef<T> modRef, DataDependenceOptions dOptions, ControlDependenceOptions cOptions,
       HeapExclusions heapExclude) throws IllegalArgumentException {
     super();
     if (dOptions == null) {
@@ -179,7 +179,7 @@ public class SDG<T extends InstanceKey> extends AbstractNumberedGraph<Statement>
   private void addPDGStatementNodes(CGNode node) {
     if (!statementsAdded.contains(node)) {
       statementsAdded.add(node);
-      PDG pdg = getPDG(node);
+      PDG<?> pdg = getPDG(node);
       for (Iterator<? extends Statement> it = pdg.iterator(); it.hasNext();) {
         addNode(it.next());
       }
@@ -795,10 +795,10 @@ public class SDG<T extends InstanceKey> extends AbstractNumberedGraph<Statement>
   }
 
   @Override
-  public PDG getPDG(CGNode node) {
-    PDG result = pdgMap.get(node);
+  public PDG<T> getPDG(CGNode node) {
+    PDG<T> result = pdgMap.get(node);
     if (result == null) {
-      result = new PDG(node, pa, mod, ref, dOptions, cOptions, heapExclude, cg, modRef);
+      result = new PDG<T>(node, pa, mod, ref, dOptions, cOptions, heapExclude, cg, modRef);
       pdgMap.put(node, result);
       // Let's not eagerly add nodes, shall we?
       // for (Iterator<? extends Statement> it = result.iterator(); it.hasNext();) {
@@ -826,7 +826,7 @@ public class SDG<T extends InstanceKey> extends AbstractNumberedGraph<Statement>
     return cg.getClassHierarchy();
   }
 
-  public PointerAnalysis<? extends InstanceKey> getPointerAnalysis() {
+  public PointerAnalysis<T> getPointerAnalysis() {
     return pa;
   }
 

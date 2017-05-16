@@ -145,7 +145,7 @@ public class JSCallGraphUtil extends com.ibm.wala.cast.ipa.callgraph.CAstCallGra
     boolean suffix = funName.startsWith("suffix:");
     
     if (suffix) {
-      Set<CGNode> nodes = new HashSet<CGNode>();
+      Set<CGNode> nodes = new HashSet<>();
       String tail = funName.substring(7);
       for (CGNode n : CG) {
         if (n.getMethod().getReference().getDeclaringClass().getName().toString().endsWith(tail)) {
@@ -190,7 +190,7 @@ public class JSCallGraphUtil extends com.ibm.wala.cast.ipa.callgraph.CAstCallGra
       throws IOException {
     try {
       TranslatorToCAst toCAst = getTranslatorFactory().make(new CAstImpl(), M);
-      final Set<String> names = new HashSet<String>();
+      final Set<String> names = new HashSet<>();
       JSAstTranslator toIR = new JSAstTranslator(cl) {
         @Override
         protected void defineFunction(CAstEntity N, WalkContext definingContext, AbstractCFG<SSAInstruction, ? extends IBasicBlock<SSAInstruction>> cfg, SymbolTable symtab,
@@ -240,7 +240,7 @@ public class JSCallGraphUtil extends com.ibm.wala.cast.ipa.callgraph.CAstCallGra
       return (String)v;
     } else if (v instanceof Double) {
       String result = v.toString();
-      if (((double) Math.round((Double)v)) == ((Double)v).doubleValue()) {
+      if ((Math.round((Double)v)) == ((Double)v).doubleValue()) {
         result = Long.toString(Math.round((Double)v));
       }
       return result;
@@ -255,7 +255,7 @@ public class JSCallGraphUtil extends com.ibm.wala.cast.ipa.callgraph.CAstCallGra
     }
   }
 
-  public static class Bootstrap implements SourceModule, Module, ModuleEntry {
+  public static class Bootstrap implements SourceModule {
     private String name;
     private InputStream stream;
     private final URL url;
@@ -268,7 +268,7 @@ public class JSCallGraphUtil extends com.ibm.wala.cast.ipa.callgraph.CAstCallGra
 
     @Override
     public Iterator<? extends ModuleEntry> getEntries() {
-      return new NonNullSingletonIterator<Bootstrap>(this);
+      return new NonNullSingletonIterator<>(this);
     }
 
     @Override

@@ -90,7 +90,7 @@ public class Intent implements ContextItem, Comparable<Intent> {
         BROADCAST,          
         /** Do not handle intent */
         IGNORE
-    };
+    }
 
     private enum Explicit {
         UNSET,
@@ -151,6 +151,7 @@ public class Intent implements ContextItem, Comparable<Intent> {
         this.immutable = true;
     }
 
+    @Override
     public Intent clone() {
         final Intent clone = new Intent();
         clone.action = this.action; // OK here?
@@ -314,8 +315,6 @@ public class Intent implements ContextItem, Comparable<Intent> {
 
     /**
      *  Fallback: tries to determine on the Intent itself if it's a standard action.
-     *
-     *  Use {@link #isStandardAction(boolean)} instead.
      */
     private static boolean isStandardAction(Intent intent) {    //TODO: This may loop forever!
         /*final Intent override = AndroidEntryPointManager.MANAGER.getIntent(intent);

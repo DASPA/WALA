@@ -144,7 +144,7 @@ implements IFlowFunctionMap<BasicBlockInContext<E>> {
 
 	private class DefUse implements IUnaryFlowFunction {
 	
-		private final List<UseDefSetPair> useToDefList = new ArrayList<UseDefSetPair>();
+		private final List<UseDefSetPair> useToDefList = new ArrayList<>();
 
 		private final BasicBlockInContext<E> bb;
 
@@ -411,6 +411,7 @@ implements IFlowFunctionMap<BasicBlockInContext<E>> {
 			}
 		}	
 
+		@Override
 		@SuppressWarnings("unchecked")
 		public IntSet getTargets(int d1) {
 			//System.out.println(this.toString()+".getTargets("+d1+") "+bb);
@@ -425,6 +426,7 @@ implements IFlowFunctionMap<BasicBlockInContext<E>> {
 		}
 	}
 
+	@Override
 	public IUnaryFlowFunction getCallFlowFunction(
 			BasicBlockInContext<E> src,
 			BasicBlockInContext<E> dest,
@@ -462,6 +464,7 @@ implements IFlowFunctionMap<BasicBlockInContext<E>> {
 
 		return new IUnaryFlowFunction() {
 
+			@Override
 			public IntSet getTargets(int d1) {
 				BitVectorIntSet set = new BitVectorIntSet();
 				if(d1 == 0 || !(domain.getMappedObject(d1).codeElement instanceof LocalElement)) {
@@ -476,6 +479,7 @@ implements IFlowFunctionMap<BasicBlockInContext<E>> {
 		};
 	}
 
+	@Override
 	public IUnaryFlowFunction getCallNoneToReturnFlowFunction(
 			BasicBlockInContext<E> src,
 			BasicBlockInContext<E> dest) {
@@ -494,6 +498,7 @@ implements IFlowFunctionMap<BasicBlockInContext<E>> {
 		return new DefUse(dest);
 	}
 
+	@Override
 	public IUnaryFlowFunction getCallToReturnFlowFunction(
 			BasicBlockInContext<E> src,
 			BasicBlockInContext<E> dest) {
@@ -504,6 +509,7 @@ implements IFlowFunctionMap<BasicBlockInContext<E>> {
 		return new DefUse(dest);
 	}
 
+	@Override
 	public IUnaryFlowFunction getNormalFlowFunction(
 			BasicBlockInContext<E> src,
 			BasicBlockInContext<E> dest) {
@@ -517,7 +523,7 @@ implements IFlowFunctionMap<BasicBlockInContext<E>> {
 	public class ReturnDefUse extends DefUse
 	{
 		CodeElement callSet;
-		Set<CodeElement> receivers = new HashSet<CodeElement>();
+		Set<CodeElement> receivers = new HashSet<>();
 
 		public ReturnDefUse(BasicBlockInContext<E> dest,
 				BasicBlockInContext<E> call) {
@@ -592,6 +598,7 @@ implements IFlowFunctionMap<BasicBlockInContext<E>> {
 		}
 	}
 
+	@Override
 	public IFlowFunction getReturnFlowFunction(BasicBlockInContext<E> call,
 			BasicBlockInContext<E> src,
 			BasicBlockInContext<E> dest) {

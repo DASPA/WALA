@@ -68,6 +68,7 @@ import com.ibm.wala.ipa.cha.IClassHierarchy;
 import com.ibm.wala.ipa.summaries.SummarizedMethod;
 import com.ibm.wala.ssa.DefUse;
 import com.ibm.wala.ssa.IR;
+import com.ibm.wala.ssa.IRView;
 import com.ibm.wala.ssa.ISSABasicBlock;
 import com.ibm.wala.ssa.SSAInstruction;
 import com.ibm.wala.types.FieldReference;
@@ -116,7 +117,7 @@ public class IntentContextInterpreter implements SSAContextInterpreter {
             return intent.getComponent();
         } else if (intent.getType() == Intent.IntentType.SYSTEM_SERVICE) {
             
-            return null;
+            return AndroidComponent.UNKNOWN;
         } else {
             final Set<AndroidComponent> possibleTargets = intentStarters.getInfo(method.getReference()).getComponentsPossible(); 
             if (possibleTargets.size() == 1) {
@@ -245,6 +246,11 @@ public class IntentContextInterpreter implements SSAContextInterpreter {
         }
     }
 
+    @Override
+    public IRView getIRView(CGNode node) {
+      return getIR(node);
+    }
+
     /**
      *  If the function associated with the node is handled by this class.
      *
@@ -256,13 +262,6 @@ public class IntentContextInterpreter implements SSAContextInterpreter {
             throw new IllegalArgumentException("node is null");
         }
         final MethodReference target = node.getMethod().getReference();
-
-        { // DEBUG
-            if (target.toString().contains("getSystemService")) {
-                return true;
-            }
-        }
-
         return (
                 intentStarters.isStarter(target) 
         );

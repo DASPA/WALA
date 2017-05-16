@@ -141,7 +141,6 @@ import com.ibm.wala.ipa.cha.IClassHierarchy;
 import com.ibm.wala.shrikeBT.ExceptionHandler;
 import com.ibm.wala.shrikeBT.IInstruction;
 import com.ibm.wala.shrikeBT.IndirectionData;
-import com.ibm.wala.shrikeCT.InvalidClassFileException;
 import com.ibm.wala.types.ClassLoaderReference;
 import com.ibm.wala.types.Descriptor;
 import com.ibm.wala.types.MethodReference;
@@ -213,14 +212,15 @@ public class DexIMethod implements IBytecodeMethod {
 	// IMethod methods
 	//-------------------------------------------
 
+	@Override
 	public TypeReference[] getDeclaredExceptions()
-			throws InvalidClassFileException, UnsupportedOperationException {
+			throws UnsupportedOperationException {
 /** BEGIN Custom change: Variable Names in synth. methods */
 		assert (eMethod.method != null);
         if (myClass.getClassDefItem().getAnnotations() == null) {
             return null;
         }
-        ArrayList<String> strings = new ArrayList<String>();
+        ArrayList<String> strings = new ArrayList<>();
         AnnotationSetItem annotationSet = myClass.getClassDefItem().getAnnotations().getMethodAnnotations(eMethod.method);
 /** END Custom change: Variable Names in synth. methods */
 
@@ -253,6 +253,7 @@ public class DexIMethod implements IBytecodeMethod {
 	}
 
 
+	@Override
 	public String getLocalVariableName(int bcIndex, int localNumber) {
 		throw new UnsupportedOperationException("getLocalVariableName not implemented");
 	}
@@ -260,7 +261,7 @@ public class DexIMethod implements IBytecodeMethod {
 	/**
 	 * XXX not fully about the + 2.
 	 * @return the RegisterCount + 2 to make some room for the return and exception register
-	 * @see com.ibm.wala.classLoader.IMethod#getMaxLocals()
+	 * @see com.ibm.wala.classLoader.ShrikeCTMethod#getMaxLocals()
 	 */
 	public int getMaxLocals() {
 		return eMethod.codeItem.getRegisterCount() + 2;
@@ -286,6 +287,7 @@ public class DexIMethod implements IBytecodeMethod {
 	 * (non-Javadoc)
 	 * @see com.ibm.wala.classLoader.IMethod#getDescriptor()
 	 */
+	@Override
 	public Descriptor getDescriptor() {
 		return getReference().getDescriptor();
 	}
@@ -294,6 +296,7 @@ public class DexIMethod implements IBytecodeMethod {
 	 * (non-Javadoc)
 	 * @see com.ibm.wala.classLoader.IMethod#getNumberOfParameters()
 	 */
+	@Override
 	public int getNumberOfParameters() {
 		final int number;
 
@@ -326,6 +329,7 @@ public class DexIMethod implements IBytecodeMethod {
 	 * (non-Javadoc)
 	 * @see com.ibm.wala.classLoader.IMethod#getParameterType(int)
 	 */
+	@Override
 	public TypeReference getParameterType(int index) {
 		if (!isStatic()) {
 			if (index == 0) {
@@ -342,6 +346,7 @@ public class DexIMethod implements IBytecodeMethod {
 	 * (non-Javadoc)
 	 * @see com.ibm.wala.classLoader.IMethod#getReference()
 	 */
+	@Override
 	public MethodReference getReference() {
 		//Compute the method reference from the MethodIdItem
 		if (methodReference == null) {
@@ -365,6 +370,7 @@ public class DexIMethod implements IBytecodeMethod {
 	 * (non-Javadoc)
 	 * @see com.ibm.wala.classLoader.IMethod#getReturnType()
 	 */
+	@Override
 	public TypeReference getReturnType() {
 		//compute the typeReference from the MethodIdItem
 		if (typeReference == null) {
@@ -378,6 +384,7 @@ public class DexIMethod implements IBytecodeMethod {
 	 * (non-Javadoc)
 	 * @see com.ibm.wala.classLoader.IMethod#getSelector()
 	 */
+	@Override
 	public Selector getSelector() {
 		return getReference().getSelector();
 	}
@@ -387,6 +394,7 @@ public class DexIMethod implements IBytecodeMethod {
 	 *
 	 * @see com.ibm.wala.classLoader.IMethod#getSignature()
 	 */
+	@Override
 	public String getSignature() {
 		return getReference().getSignature();
 	}
@@ -395,8 +403,9 @@ public class DexIMethod implements IBytecodeMethod {
 	 * (non-Javadoc)
 	 * @see com.ibm.wala.classLoader.IMethod#hasExceptionHandler()
 	 */
+	@Override
 	public boolean hasExceptionHandler() {
-		TryItem[] tries = eMethod.codeItem.getTries();;
+		TryItem[] tries = eMethod.codeItem.getTries();
 		return tries==null?false:tries.length > 0;
 	}
 
@@ -404,6 +413,7 @@ public class DexIMethod implements IBytecodeMethod {
 	 * (non-Javadoc)
 	 * @see com.ibm.wala.classLoader.IMethod#hasLocalVariableTable()
 	 */
+	@Override
 	public boolean hasLocalVariableTable() {
 		throw new UnsupportedOperationException("DexIMethod: hasLocalVariableTable() not yet implemented");
 		//TODO Compute the local variable name from the DebugInfo Item
@@ -415,6 +425,7 @@ public class DexIMethod implements IBytecodeMethod {
 	 * (non-Javadoc)
 	 * @see com.ibm.wala.classLoader.IMethod#isAbstract()
 	 */
+	@Override
 	public boolean isAbstract() {
 		return (eMethod.accessFlags & ABSTRACT.getValue()) != 0;
 	}
@@ -423,6 +434,7 @@ public class DexIMethod implements IBytecodeMethod {
 	 * (non-Javadoc)
 	 * @see com.ibm.wala.classLoader.IMethod#isClinit()
 	 */
+	@Override
 	public boolean isClinit() {
 		return eMethod.method.getMethodName().getStringValue().equals(MethodReference.clinitName.toString());
 	}
@@ -431,6 +443,7 @@ public class DexIMethod implements IBytecodeMethod {
 	 * (non-Javadoc)
 	 * @see com.ibm.wala.classLoader.IMethod#isFinal()
 	 */
+	@Override
 	public boolean isFinal() {
 		return (eMethod.accessFlags & FINAL.getValue()) != 0;
 	}
@@ -439,6 +452,7 @@ public class DexIMethod implements IBytecodeMethod {
 	 * (non-Javadoc)
 	 * @see com.ibm.wala.classLoader.IMethod#isInit()
 	 */
+	@Override
 	public boolean isInit() {
 		return eMethod.method.getMethodName().getStringValue().equals(MethodReference.initAtom.toString());
 	}
@@ -447,6 +461,7 @@ public class DexIMethod implements IBytecodeMethod {
 	 * (non-Javadoc)
 	 * @see com.ibm.wala.classLoader.IMethod#isNative()
 	 */
+	@Override
 	public boolean isNative() {
 		return (eMethod.accessFlags & NATIVE.getValue()) != 0;
 	}
@@ -455,6 +470,7 @@ public class DexIMethod implements IBytecodeMethod {
 	 * (non-Javadoc)
 	 * @see com.ibm.wala.classLoader.IMethod#isBridge()
 	 */
+	@Override
 	public boolean isBridge() {
 		return (eMethod.accessFlags & BRIDGE.getValue()) != 0;
 	}
@@ -463,6 +479,7 @@ public class DexIMethod implements IBytecodeMethod {
 	 * (non-Javadoc)
 	 * @see com.ibm.wala.classLoader.IMethod#isPrivate()
 	 */
+	@Override
 	public boolean isPrivate() {
 		return (eMethod.accessFlags & PRIVATE.getValue()) != 0;
 	}
@@ -471,6 +488,7 @@ public class DexIMethod implements IBytecodeMethod {
 	 * (non-Javadoc)
 	 * @see com.ibm.wala.classLoader.IMethod#isProtected()
 	 */
+	@Override
 	public boolean isProtected() {
 		return (eMethod.accessFlags & PROTECTED.getValue()) != 0;
 	}
@@ -480,6 +498,7 @@ public class DexIMethod implements IBytecodeMethod {
 	 *
 	 * @see com.ibm.wala.classLoader.IMethod#isPublic()
 	 */
+	@Override
 	public boolean isPublic() {
 		return (eMethod.accessFlags & PUBLIC.getValue()) != 0;
 	}
@@ -488,6 +507,7 @@ public class DexIMethod implements IBytecodeMethod {
 	 * (non-Javadoc)
 	 * @see com.ibm.wala.classLoader.IMethod#isSynchronized()
 	 */
+	@Override
 	public boolean isSynchronized() {
 		return (eMethod.accessFlags & DECLARED_SYNCHRONIZED.getValue()) != 0;
 	}
@@ -496,6 +516,7 @@ public class DexIMethod implements IBytecodeMethod {
 	 * (non-Javadoc)
 	 * @see com.ibm.wala.classLoader.IMethod#isSynthetic()
 	 */
+	@Override
 	public boolean isSynthetic() {
 		return false;
 	}
@@ -504,6 +525,7 @@ public class DexIMethod implements IBytecodeMethod {
 	 * (non-Javadoc)
 	 * @see com.ibm.wala.classLoader.IMember#isStatic()
 	 */
+	@Override
 	public boolean isStatic() {
 		return (eMethod.accessFlags & STATIC.getValue()) != 0;
 	}
@@ -520,6 +542,7 @@ public class DexIMethod implements IBytecodeMethod {
 	 * (non-Javadoc)
 	 * @see com.ibm.wala.classLoader.IMember#getDeclaringClass()
 	 */
+	@Override
 	public IClass getDeclaringClass() {
 		return myClass;
 	}
@@ -529,14 +552,17 @@ public class DexIMethod implements IBytecodeMethod {
 	 *
 	 * @see com.ibm.wala.ipa.cha.IClassHierarchyDweller#getClassHierarchy()
 	 */
+	@Override
 	public IClassHierarchy getClassHierarchy() {
 		return myClass.getClassHierarchy();
 	}
 
+	@Override
 	public Atom getName() {
 		return getReference().getName();
 	}
 
+	@Override
 	public int getLineNumber(int bcIndex) {
 		return lineNumbers.getOrDefault(bcIndex, -1);
 	}
@@ -585,7 +611,8 @@ public class DexIMethod implements IBytecodeMethod {
 	//-------------------------------------------
 
 
-	public int getBytecodeIndex(int i) throws InvalidClassFileException {
+	@Override
+	public int getBytecodeIndex(int i) {
 		// TODO Auto-generated method stub
 		//      System.out.println("DexIMethod: getBytecodeIndex() possibly not implemented correctly");
 		//      Integer.valueOf(eMethod.codeItem.getInstructions()[i].opcode.value);
@@ -595,7 +622,8 @@ public class DexIMethod implements IBytecodeMethod {
 	}
 
 
-	public ExceptionHandler[][] getHandlers() throws InvalidClassFileException {
+	@Override
+	public ExceptionHandler[][] getHandlers() {
 
 		if (handlers != null)
 			return handlers;
@@ -624,7 +652,7 @@ public class DexIMethod implements IBytecodeMethod {
 			return handlers;
 		}
 
-		ArrayList<ArrayList<ExceptionHandler>> temp_array = new ArrayList<ArrayList<ExceptionHandler>>();
+		ArrayList<ArrayList<ExceptionHandler>> temp_array = new ArrayList<>();
 		for (int i = 0; i < instructions().size(); i++) {
 			temp_array.add(new ArrayList<ExceptionHandler>());
 		}
@@ -656,6 +684,12 @@ public class DexIMethod implements IBytecodeMethod {
 				endInst = getInstructionIndex(endAddress) - 1;
 			}
 
+			for (int i = startInst; i <= endInst; i++) {
+				//add the rest of the handlers
+				for (EncodedTypeAddrPair etaps: tryItem.encodedCatchHandler.handlers) {
+					temp_array.get(i).add(new ExceptionHandler( getInstructionIndex(etaps.getHandlerAddress()), etaps.exceptionType.getTypeDescriptor() ));
+				}
+			}
 			//add the catch all handler if it exists
 			int catchAllAddress = tryItem.encodedCatchHandler.getCatchAllHandlerAddress();
 			if (catchAllAddress != -1) {
@@ -669,18 +703,11 @@ public class DexIMethod implements IBytecodeMethod {
 				}
 				//throw new UnimplementedError("DexIMethod->handlers: getCatchAllHandlerAddress() not yet implemented");
 			}
-
-			for (int i = startInst; i <= endInst; i++) {
-				//add the rest of the handlers
-				for (EncodedTypeAddrPair etaps: tryItem.encodedCatchHandler.handlers) {
-					temp_array.get(i).add(new ExceptionHandler( getInstructionIndex(etaps.getHandlerAddress()), etaps.exceptionType.getTypeDescriptor() ));
-				}
-			}
 		}
 
 
 		for (int i = 0; i < instructions().size(); i++) {
-			handlers[i] = (ExceptionHandler[])temp_array.get(i).toArray(new ExceptionHandler[temp_array.get(i).size()]);
+			handlers[i] = temp_array.get(i).toArray(new ExceptionHandler[temp_array.get(i).size()]);
 		
 			/*
 			System.out.println("i: " + i);
@@ -697,6 +724,7 @@ public class DexIMethod implements IBytecodeMethod {
 
 
 
+	@Override
 	public IInstruction[] getInstructions() {
 		if (instructions == null)
 			parseBytecode();
@@ -3154,7 +3182,7 @@ public class DexIMethod implements IBytecodeMethod {
 	}
 
 	public Instruction[] getDexInstructions() {
-		return (Instruction[]) instructions().toArray(new Instruction[instructions().size()]);
+		return instructions().toArray(new Instruction[instructions().size()]);
 	}
 
 
@@ -3169,6 +3197,7 @@ public class DexIMethod implements IBytecodeMethod {
 		return instructions().getPcFromIndex(index);
 	}
 
+	@Override
 	public int getInstructionIndex(int bytecodeindex) {
 		return instructions().getIndexFromPc(bytecodeindex);
 	}
@@ -3181,10 +3210,12 @@ public class DexIMethod implements IBytecodeMethod {
 
 		private final int[] NOTHING = new int[0];
 
+		@Override
 		public int[] indirectlyReadLocals(int instructionIndex) {
 			return NOTHING;
 		}
 
+		@Override
 		public int[] indirectlyWrittenLocals(int instructionIndex) {
 			return NOTHING;
 		}
@@ -3192,6 +3223,7 @@ public class DexIMethod implements IBytecodeMethod {
 	};
 
 
+	@Override
 	public IndirectionData getIndirectionData() {
 		return NO_INDIRECTIONS;
 	}
@@ -3218,14 +3250,12 @@ public class DexIMethod implements IBytecodeMethod {
 
     /**
      *
-     * @throws InvalidClassFileException
      * @throws UnsupportedOperationException
      *
      * @todo    Review this implementation - it may be horribly wrong!
      */
 	@Override
-	public Collection<CallSiteReference> getCallSites()
-			throws InvalidClassFileException {
+	public Collection<CallSiteReference> getCallSites() {
         Collection<CallSiteReference> empty = Collections.emptySet();
         if (isNative()) {
             return empty;
@@ -3233,7 +3263,7 @@ public class DexIMethod implements IBytecodeMethod {
 
         // assert(false) : "Please review getCallSites-Implementation before use!";        // TODO
 
-        ArrayList<CallSiteReference> csites = new ArrayList<CallSiteReference>();
+        ArrayList<CallSiteReference> csites = new ArrayList<>();
         // XXX The call Sites in this method or to this method?!!!
         for (Instruction inst: instructions()) {
             if (inst instanceof Invoke) {
@@ -3256,12 +3286,12 @@ public class DexIMethod implements IBytecodeMethod {
 	}
 
 	@Override
-	public SourcePosition getSourcePosition(int instructionIndex) throws InvalidClassFileException {
+	public SourcePosition getSourcePosition(int instructionIndex) {
 		return null;
 	}
 
 	@Override
-	public SourcePosition getParameterSourcePosition(int paramNum) throws InvalidClassFileException {
+	public SourcePosition getParameterSourcePosition(int paramNum) {
 		return null;
 	}
 

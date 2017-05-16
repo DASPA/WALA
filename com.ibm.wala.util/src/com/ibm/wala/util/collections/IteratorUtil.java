@@ -46,9 +46,8 @@ public class IteratorUtil {
     return count;
   }
 
-  @SuppressWarnings("deprecation")
   public static <T, S extends T> Iterator<S> filter(Iterator<T> iterator, final Class<S> cls) {
-    return new MapIterator<T,S>(
+    return new MapIterator<>(
         new FilterIterator<T>(iterator, new Predicate<T>() {
           @Override public boolean test(T o) {
             return cls.isInstance(o);

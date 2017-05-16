@@ -168,13 +168,13 @@ public class DotUtil {
     }
     try {
       File f = new File(dotfile);
-      FileWriter fw = new FileWriter(f);
-      fw.write(dotStringBuffer.toString());
-      fw.close();
+      try (FileWriter fw = new FileWriter(f)) {
+        fw.write(dotStringBuffer.toString());
+      }
       return f;
 
     } catch (Exception e) {
-      throw new WalaException("Error writing dot file " + dotfile);
+      throw new WalaException("Error writing dot file " + dotfile, e);
     }
   }
 
@@ -262,7 +262,9 @@ public class DotUtil {
    */
   private static <T> String decorateNode(T n, NodeDecorator<T> d) throws WalaException {
     StringBuffer result = new StringBuffer();
-    result.append(" [ ]\n");
+    result.append(" [ label=\"");
+    result.append(getLabel(n, d));
+    result.append("\"]\n");
     return result.toString();
   }
 
