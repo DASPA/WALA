@@ -19,9 +19,25 @@
 	  <execution>
 	    <phase>compile</phase>
 	    <configuration>
-	      <executable>bash</executable>
+	      <executable>make</executable>
 	      <arguments>
-		<argument>${basedir}/harness-src/c/cbuild.sh</argument>
+		<argument>default</argument>
+		<argument>main</argument>
+	      </arguments>
+	      <workingDirectory>${basedir}/harness-src/c</workingDirectory>
+	    </configuration>
+	    <goals>
+	      <goal>exec</goal>
+	    </goals>
+	  </execution>
+	  <execution>
+	    <id>test-native</id>
+	    <phase>test</phase>
+	    <configuration>
+	      <workingDirectory>${basedir}</workingDirectory>
+	      <executable>${project.build.outputDirectory}/smoke_main</executable>
+	      <arguments>
+		<argument>target/classes:../com.ibm.wala.cast/target/classes:../com.ibm.wala.core/target/classes:../com.ibm.wala.util/target/classes</argument>
 	      </arguments>
 	    </configuration>
 	    <goals>
