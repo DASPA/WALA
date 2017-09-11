@@ -184,7 +184,7 @@ public class DexIMethod implements IBytecodeMethod<Instruction> {
 	
 	protected InstructionArray instructions;
 
-	private Map<Integer, Integer> lineNumbers = new HashMap<Integer, Integer>();
+	private Map<Integer, Integer> lineNumbers = new HashMap<>();
 
 	private static int totalInsts = 0;
 
