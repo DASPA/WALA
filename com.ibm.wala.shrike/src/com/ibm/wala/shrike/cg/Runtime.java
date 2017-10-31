@@ -53,7 +53,7 @@ public class Runtime {
   private PrintWriter output;
   private SetOfClasses filter;
   private Policy handleCallback;
-  private String currentSite;
+  private ThreadLocal<String> currentSite = new ThreadLocal<>();
   
   private ThreadLocal<Stack<String>> callStacks = new ThreadLocal<Stack<String>>() {
 
@@ -120,7 +120,7 @@ public class Runtime {
   }
   
   public static void execution(String klass, String method, Object receiver) {
-    runtime.currentSite = null;
+    runtime.currentSite.set(null);
     if (runtime.filter == null || ! runtime.filter.contains(bashToDescriptor(klass))) {
       if (runtime.output != null) {
         String caller = runtime.callStacks.get().peek();
@@ -134,10 +134,12 @@ public class Runtime {
             if (stack.length > 2) {
               // frames: Runtime.execution(0), callee(1), caller(2)
               StackTraceElement callerFrame = stack[2];
-              if (! caller.contains(callerFrame.getMethodName()) ||
-                  ! caller.contains(bashToDescriptor(callerFrame.getClassName()))) {
-                runtime.handleCallback.callback(stack, klass, method, receiver);
-                break checkValid;
+              if (!callerFrame.getMethodName().startsWith("$")) {
+                if (! caller.contains(callerFrame.getMethodName())||
+                    ! caller.contains(bashToDescriptor(callerFrame.getClassName()))) {
+                  runtime.handleCallback.callback(stack, klass, method, receiver);
+                  break checkValid;
+                }
               }
             }
           }
@@ -162,23 +164,26 @@ public class Runtime {
   }
   
   public static void pop() {
-    if (runtime.currentSite != null) {
+    if (runtime.currentSite.get() != null) {
       synchronized (runtime) {
         if (runtime.output != null) {
-          runtime.output.printf("return from " + runtime.currentSite + "\n");
+          runtime.output.printf("return from " + runtime.currentSite.get() + "\n");
           runtime.output.flush();
         }
       }
 
-      runtime.currentSite = null;
+      runtime.currentSite.set(null);
     }
   }
   
   public static void addToCallStack(String klass, String method, Object receiver) {
-    runtime.currentSite = klass + "\t" + method + "\t" + receiver;
+    String callerClass = runtime.callStacks.get().isEmpty() ? "BLOB" : runtime.callStacks.get().peek().split("\t")[0];
+    String callerMethod = runtime.callStacks.get().isEmpty() ? "BLOB" : runtime.callStacks.get().peek().split("\t")[1];
+    runtime.currentSite.set(callerClass + "\t" + callerMethod + "\t" + klass + "\t" + method + "\t" + receiver);
+//	  runtime.currentSite = klass + "\t" + method + "\t" + receiver;
     synchronized (runtime) {
       if (runtime.output != null) {
-        runtime.output.printf("call to " + runtime.currentSite + "\n");
+        runtime.output.printf("call to " + runtime.currentSite.get() + "\n");
         runtime.output.flush();
       }
     }    
