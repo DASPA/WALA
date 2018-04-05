@@ -81,9 +81,11 @@ import com.ibm.wala.types.TypeName;
 import com.ibm.wala.types.TypeReference;
 import com.ibm.wala.util.collections.HashMapFactory;
 import com.ibm.wala.util.collections.HashSetFactory;
+import com.ibm.wala.util.collections.Iterator2Iterable;
 import com.ibm.wala.util.collections.MapUtil;
 import com.ibm.wala.util.collections.Pair;
 import com.ibm.wala.util.debug.Assertions;
+import com.ibm.wala.util.debug.UnimplementedError;
 import com.ibm.wala.util.graph.impl.SparseNumberedGraph;
 import com.ibm.wala.util.graph.traverse.DFS;
 import com.ibm.wala.util.intset.IntSet;
@@ -322,7 +324,6 @@ public abstract class AstTranslator extends CAstVisitor<AstTranslator.WalkContex
    *          the AST node representing the read
    * @param context
    * @param name
-   * @return
    */
   protected int doLexicallyScopedRead(CAstNode node, WalkContext context, final String name, TypeReference type) {
     return doLexReadHelper(context, name, type);
@@ -922,8 +923,8 @@ public abstract class AstTranslator extends CAstVisitor<AstTranslator.WalkContex
     void makeExitBlock(PreBasicBlock bb) {
       bb.makeExitBlock();
 
-      for (Iterator<? extends PreBasicBlock> ps = getPredNodes(bb); ps.hasNext();)
-        normalToExit.add(ps.next());
+      for (PreBasicBlock p : Iterator2Iterable.make(getPredNodes(bb)))
+        normalToExit.add(p);
 
       // now that we have created the exit block, add the delayed edges to the
       // exit
@@ -944,8 +945,7 @@ public abstract class AstTranslator extends CAstVisitor<AstTranslator.WalkContex
      */
     private void checkForRealizedEdges(CAstNode n) {
       if (delayedEdges.containsKey(n)) {
-        for (Iterator<Pair<PreBasicBlock, Boolean>> ss = delayedEdges.get(n).iterator(); ss.hasNext();) {
-          Pair<PreBasicBlock, Boolean> s = ss.next();
+        for (Pair<PreBasicBlock, Boolean> s : delayedEdges.get(n)) {
           PreBasicBlock src = s.fst;
           boolean exception = s.snd;
           if (unwind == null) {
@@ -965,8 +965,7 @@ public abstract class AstTranslator extends CAstVisitor<AstTranslator.WalkContex
      */
     private void checkForRealizedExitEdges(PreBasicBlock exitBlock) {
       if (delayedEdges.containsKey(exitMarker)) {
-        for (Iterator<Pair<PreBasicBlock, Boolean>> ss = delayedEdges.get(exitMarker).iterator(); ss.hasNext();) {
-          Pair<PreBasicBlock, Boolean> s = ss.next();
+        for (Pair<PreBasicBlock, Boolean> s : delayedEdges.get(exitMarker)) {
           PreBasicBlock src = s.fst;
           boolean exception = s.snd;
           addEdge(src, exitBlock);
@@ -1145,8 +1144,7 @@ public abstract class AstTranslator extends CAstVisitor<AstTranslator.WalkContex
                                       EdgeOperation normal,
                                       EdgeOperation except) {
       for (PreBasicBlock src : blocks) {
-        for (Iterator<PreBasicBlock> j = icfg.getSuccNodes(src); j.hasNext();) {
-          PreBasicBlock dst = j.next();
+        for (PreBasicBlock dst : Iterator2Iterable.make(icfg.getSuccNodes(src))) {
           if (isCatchBlock(dst.getNumber()) || (dst.isExitBlock() && icfg.exceptionalToExit.contains(src))) {
             except.act(src, dst);
           }
@@ -1196,22 +1194,16 @@ public abstract class AstTranslator extends CAstVisitor<AstTranslator.WalkContex
       final Map<PreBasicBlock, Collection<PreBasicBlock>> exceptionalEdges = 
         hasDeadBlocks? HashMapFactory.<PreBasicBlock,Collection<PreBasicBlock>>make() : null;
       if (hasDeadBlocks) {
-        transferEdges(liveBlocks, icfg, new EdgeOperation() {
-          @Override
-          public void act(PreBasicBlock src, PreBasicBlock dst) {
-            if (! normalEdges.containsKey(src)) {
-              normalEdges.put(src, HashSetFactory.<PreBasicBlock>make());
-            }
-            normalEdges.get(src).add(dst);
+        transferEdges(liveBlocks, icfg, (src, dst) -> {
+          if (! normalEdges.containsKey(src)) {
+            normalEdges.put(src, HashSetFactory.<PreBasicBlock>make());
           }
-        }, new EdgeOperation() {
-          @Override
-          public void act(PreBasicBlock src, PreBasicBlock dst) {
-            if (! exceptionalEdges.containsKey(src)) {
-              exceptionalEdges.put(src, HashSetFactory.<PreBasicBlock>make());
-            }
-            exceptionalEdges.get(src).add(dst);
-          }         
+          normalEdges.get(src).add(dst);
+        }, (src, dst) -> {
+          if (! exceptionalEdges.containsKey(src)) {
+            exceptionalEdges.put(src, HashSetFactory.<PreBasicBlock>make());
+          }
+          exceptionalEdges.get(src).add(dst);
         });
       }
       
@@ -1268,17 +1260,7 @@ public abstract class AstTranslator extends CAstVisitor<AstTranslator.WalkContex
           }
         }
       } else {
-        transferEdges(liveBlocks, icfg, new EdgeOperation() {
-          @Override
-          public void act(PreBasicBlock src, PreBasicBlock dst) {
-            addNormalEdge(src, dst);
-          }
-        }, new EdgeOperation() {
-          @Override
-          public void act(PreBasicBlock src, PreBasicBlock dst) {
-            addExceptionalEdge(src, dst);
-          }
-        });
+        transferEdges(liveBlocks, icfg, this::addNormalEdge, this::addExceptionalEdge);
       }
       
       int x = 0;
@@ -1362,16 +1344,16 @@ public abstract class AstTranslator extends CAstVisitor<AstTranslator.WalkContex
       SSAInstruction[] insts = getInstructions();
       StringBuffer s = new StringBuffer("CAst CFG of " + functionName);
       int params[] = symtab.getParameterValueNumbers();
-      for (int i = 0; i < params.length; i++)
-        s.append(" ").append(params[i]);
+      for (int param : params)
+        s.append(" ").append(param);
       s.append("\n");
 
       for (int i = 0; i < getNumberOfNodes(); i++) {
         PreBasicBlock bb = getNode(i);
         s.append(bb).append("\n");
 
-        for (Iterator<PreBasicBlock> ss = getSuccNodes(bb); ss.hasNext();)
-          s.append("    -->" + ss.next() + "\n");
+        for (PreBasicBlock pbb : Iterator2Iterable.make(getSuccNodes(bb)))
+          s.append("    -->" + pbb + "\n");
 
         for (int j = bb.getFirstInstructionIndex(); j <= bb.getLastInstructionIndex(); j++)
           if (insts[j] != null)
@@ -2131,7 +2113,7 @@ public abstract class AstTranslator extends CAstVisitor<AstTranslator.WalkContex
           } else if (hasSpecialUndeclaredVariables()) {
             return null;
           } else {
-            throw new Error("cannot find " + name);
+            throw new UnimplementedError("cannot find " + name);
           }
         }
 
@@ -2621,8 +2603,8 @@ public abstract class AstTranslator extends CAstVisitor<AstTranslator.WalkContex
       } else {
         TypeReference[] data = catchTypes.get(bb);
 
-        for (int i = 0; i < data.length; i++) {
-          if (data[i] == catchType) {
+        for (TypeReference element : data) {
+          if (element == catchType) {
             return;
           }
         }
@@ -2881,8 +2863,7 @@ public abstract class AstTranslator extends CAstVisitor<AstTranslator.WalkContex
 
       if (accesses != null) {
         Set<String> parents = new LinkedHashSet<>();
-        for (Iterator<Access> ACS = accesses.iterator(); ACS.hasNext();) {
-          Access AC = ACS.next();
+        for (Access AC : accesses) {
           if (AC.variableDefiner != null) {
             parents.add(AC.variableDefiner);
           }
@@ -2928,18 +2909,18 @@ public abstract class AstTranslator extends CAstVisitor<AstTranslator.WalkContex
       if (allExposedUses == null) {
         allExposedUses = IntSetUtil.make();
         if (exitLexicalUses != null) {
-          for (int i = 0; i < exitLexicalUses.length; i++) {
-            if (exitLexicalUses[i] > 0) {
-              allExposedUses.add(exitLexicalUses[i]);
+          for (int exitLexicalUse : exitLexicalUses) {
+            if (exitLexicalUse > 0) {
+              allExposedUses.add(exitLexicalUse);
             }
           }
         }
         if (instructionLexicalUses != null) {
-          for (int i = 0; i < instructionLexicalUses.length; i++) {
-            if (instructionLexicalUses[i] != null) {
-              for (int j = 0; j < instructionLexicalUses[i].length; j++) {
-                if (instructionLexicalUses[i][j] > 0) {
-                  allExposedUses.add(instructionLexicalUses[i][j]);
+          for (int[] instructionLexicalUse : instructionLexicalUses) {
+            if (instructionLexicalUse != null) {
+              for (int element : instructionLexicalUse) {
+                if (element > 0) {
+                  allExposedUses.add(element);
                 }
               }
             }
@@ -3120,10 +3101,8 @@ public abstract class AstTranslator extends CAstVisitor<AstTranslator.WalkContex
       System.err.println(("names array of size " + map.length));
     }
 
-    for (Iterator<Scope> S = scopes.iterator(); S.hasNext();) {
-      Scope scope = S.next();
-      for (Iterator<String> I = scope.getAllNames(); I.hasNext();) {
-        String nm = I.next();
+    for (Scope scope : scopes) {
+      for (String nm : Iterator2Iterable.make(scope.getAllNames())) {
         
         if (ignoreName(nm)) {
           continue;
@@ -3251,8 +3230,10 @@ public abstract class AstTranslator extends CAstVisitor<AstTranslator.WalkContex
   protected boolean visitFunctionEntity(CAstEntity n, WalkContext context, WalkContext codeContext, CAstVisitor<WalkContext> visitor) {
     if (n.getAST() == null) // presumably abstract
       declareFunction(n, context);
-    else
+    else {
+      declareFunction(n, context);
       initFunctionEntity(codeContext);
+    }
     return false;
   }
 

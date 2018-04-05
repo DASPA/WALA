@@ -269,7 +269,7 @@ public class XMLMethodSummaryReader implements BytecodeConstants {
     private int nextLocal = -1;
 
     /**
-     * A mapping from String (variable name) -> Integer (local number)
+     * A mapping from String (variable name) -&gt; Integer (local number)
      */
     private Map<String, Integer> symbolTable = null;
 
@@ -353,7 +353,7 @@ public class XMLMethodSummaryReader implements BytecodeConstants {
     }
 
     private void startClass(String cname, Attributes atts) {
-      String clName = "L" + governingPackage + "/" + cname;
+      String clName = governingPackage==null? "L" + cname: "L" + governingPackage + "/" + cname;
       governingClass = className2Ref(clName);
       String allocString = atts.getValue(A_ALLOCATABLE);
       if (allocString != null) {
@@ -417,8 +417,8 @@ public class XMLMethodSummaryReader implements BytecodeConstants {
       Assertions.productionAssertion(governingMethod.getReturnType() != null);
       if (governingMethod.getReturnType().isReferenceType()) {
         SSAInstruction[] statements = governingMethod.getStatements();
-        for (int i = 0; i < statements.length; i++) {
-          if (statements[i] instanceof SSAReturnInstruction) {
+        for (SSAInstruction statement : statements) {
+          if (statement instanceof SSAReturnInstruction) {
             return;
           }
         }
@@ -459,6 +459,12 @@ public class XMLMethodSummaryReader implements BytecodeConstants {
       } else {
         Assertions.UNREACHABLE("Invalid call type " + typeString);
       }
+
+      String paramCount = atts.getValue(A_NUM_ARGS);
+      if (paramCount != null) {
+        nParams = Integer.parseInt(paramCount);
+      }
+      
       int[] params = new int[nParams];
 
       for (int i = 0; i < params.length; i++) {
@@ -466,7 +472,7 @@ public class XMLMethodSummaryReader implements BytecodeConstants {
         Assertions.productionAssertion(argString != null, "unspecified arg in method " + governingMethod + " " + site);
         Integer valueNumber = symbolTable.get(argString);
         if (valueNumber == null) {
-          Assertions.UNREACHABLE("Cannot lookup value: " + argString);
+          valueNumber = Integer.parseInt(argString);
         }
         params[i] = valueNumber.intValue();
       }
@@ -634,10 +640,7 @@ public class XMLMethodSummaryReader implements BytecodeConstants {
       if (V == null) {
         Assertions.UNREACHABLE("Must specify value for putfield " + governingMethod);
       }
-      Integer valueNumber = symbolTable.get(V);
-      if (valueNumber == null) {
-        Assertions.UNREACHABLE("Cannot lookup value: " + V);
-      }
+      Integer valueNumber = symbolTable.containsKey(V)? symbolTable.get(V): Integer.parseInt(V);
 
       // get the ref stored to
       String R = atts.getValue(A_REF);

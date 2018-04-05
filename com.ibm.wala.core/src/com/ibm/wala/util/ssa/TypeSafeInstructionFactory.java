@@ -53,6 +53,7 @@ import com.ibm.wala.ipa.cha.IClassHierarchy;
 import com.ibm.wala.shrikeBT.IConditionalBranchInstruction;
 import com.ibm.wala.shrikeBT.IInvokeInstruction;
 import com.ibm.wala.shrikeCT.BootstrapMethodsReader.BootstrapMethod;
+import com.ibm.wala.ssa.SSAAbstractInvokeInstruction;
 import com.ibm.wala.ssa.SSAArrayLoadInstruction;
 import com.ibm.wala.ssa.SSAArrayStoreInstruction;
 import com.ibm.wala.ssa.SSAConditionalBranchInstruction;
@@ -77,7 +78,7 @@ import com.ibm.wala.types.TypeReference;
  *
  *  @see    com.ibm.wala.classLoader.JavaLanguage.JavaInstructionFactory
  *
- *  @author Tobias Blaschke <code@tobiasblaschke.de>
+ *  @author Tobias Blaschke &lt;code@tobiasblaschke.de&gt;
  *  @since  2013-10-20
  */
 public class TypeSafeInstructionFactory {
@@ -109,7 +110,7 @@ public class TypeSafeInstructionFactory {
      *  @param  exception   An SSAValue receiving the exception-object when something in the method throws unhandled
      *  @param  site    The CallSiteReference to this call.
      */
-    public SSAInvokeInstruction InvokeInstruction(final int iindex, final SSAValue result, List<? extends SSAValue> params, 
+    public SSAAbstractInvokeInstruction InvokeInstruction(final int iindex, final SSAValue result, List<? extends SSAValue> params, 
             final SSAValue exception, final CallSiteReference site) {
         info("Now: InvokeInstruction to {} using {}", site, params);
         if (iindex < 0) {
