@@ -82,16 +82,11 @@ public class RangePosition extends AbstractSourcePosition {
 
   private int getCol(int line, int offset) {
     int col = -1;
-    Reader reader = null;
-    try {
-      reader = getReader();
+    try (Reader reader = getReader()){
       col = getCol(IOUtils.toString(reader), line, offset);
     } catch (IOException e) {
       e.printStackTrace();
-    } finally {
-      IOUtils.closeQuietly(reader);
     }
-
     return col;
   }
 
