@@ -408,6 +408,17 @@ public class CAstPattern {
       visit(top, c, this);   
       return result;
     }
+
+    @Override
+    protected boolean doVisit(CAstNode n, Context context, CAstVisitor<Context> visitor) {
+      return true;
+    }
+
+    @Override
+    protected boolean doVisitAssignNodes(CAstNode n, Context context, CAstNode v, CAstNode a, CAstVisitor<Context> visitor) {
+      return true;
+    }
+        
   }
     
   private static class Parser {

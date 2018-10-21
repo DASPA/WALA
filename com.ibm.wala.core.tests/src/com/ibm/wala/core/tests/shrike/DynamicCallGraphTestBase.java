@@ -13,9 +13,9 @@ package com.ibm.wala.core.tests.shrike;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -48,44 +48,38 @@ public abstract class DynamicCallGraphTestBase extends WalaTestCase {
   
   protected boolean testPatchCalls = false;
   
-  protected static String getClasspathEntry(String elt) {
-    for (String s : System.getProperty("java.class.path").split(File.pathSeparator)) {
-      if (s.indexOf(elt) >= 0) {
-        File e = new File(s);
-         Assert.assertTrue(elt + " expected to exist", e.exists());
-        if (e.isDirectory() && !s.endsWith("/")) {
-          s = s + "/";
-        }
-        return s;
-      }
-    }
-    Assert.assertFalse("cannot find " + elt, true);
-    return null;
-  }
-  
   private boolean instrumentedJarBuilt = false;
   
-  private String instrumentedJarLocation = System.getProperty("java.io.tmpdir") + File.separator + "test.jar";
+  private java.nio.file.Path instrumentedJarLocation;
 
-  private String cgLocation = System.getProperty("java.io.tmpdir") + File.separator + "cg.txt";
+  private java.nio.file.Path cgLocation;
+
+  protected DynamicCallGraphTestBase() {
+      try {
+          instrumentedJarLocation = Files.createTempFile("wala-test", ".jar");
+	  instrumentedJarLocation.toFile().deleteOnExit();
+          cgLocation = Files.createTempFile("cg", ".txt");
+	  cgLocation.toFile().deleteOnExit();
+      } catch (IOException problem) {
+          throw new RuntimeException(problem);
+      }
+  }
 
   protected void instrument(String testJarLocation) throws IOException, ClassNotFoundException, InvalidClassFileException, FailureException {
     if (! instrumentedJarBuilt) {
       System.err.println("core data jar to instrument: " + testJarLocation);
       
-      if (new File(instrumentedJarLocation).exists()) {
-        assert new File(instrumentedJarLocation).delete();
-      }
+      Files.deleteIfExists(instrumentedJarLocation);
       
       String rtJar = null;
       for(String jar : WalaProperties.getJ2SEJarFiles()) {
-        if (jar.endsWith("rt.jar") || jar.endsWith("classes.jar")) {
+        if (jar.endsWith(File.separator + "rt.jar") || jar.endsWith(File.separator + "classes.jar")) {
           rtJar = jar;
         }
       }
       
       List<String> args = new ArrayList<>();
-      args.addAll(Arrays.asList(testJarLocation, "-o", instrumentedJarLocation));
+      args.addAll(Arrays.asList(testJarLocation, "-o", instrumentedJarLocation.toString()));
       if (rtJar != null) {
         args.addAll(Arrays.asList("--rt-jar", rtJar));
       }
@@ -93,14 +87,16 @@ public abstract class DynamicCallGraphTestBase extends WalaTestCase {
         args.add("--patch-calls");
       }
       OfflineDynamicCallGraph.main(args.toArray(new String[ args.size() ]));
-      Assert.assertTrue("expected to create /tmp/test.jar", new File(instrumentedJarLocation).exists());   
+      Assert.assertTrue("expected to create " + instrumentedJarLocation, Files.exists(instrumentedJarLocation));
       instrumentedJarBuilt = true;
     }
   }
   
   protected void run(String mainClass, String exclusionsFile, String... args) throws IOException, SecurityException, IllegalArgumentException, InterruptedException {
     Project p = new Project();
-    p.setBaseDir(new File(System.getProperty("java.io.tmpdir")));
+    final File projectDir = Files.createTempDirectory("wala-test").toFile();
+    projectDir.deleteOnExit();
+    p.setBaseDir(projectDir);
     p.init();
     p.fireBuildStarted();
 
@@ -125,9 +121,7 @@ public abstract class DynamicCallGraphTestBase extends WalaTestCase {
     childJvm.setFailonerror(true);
     childJvm.setFork(true);
     
-    if (new File(cgLocation).exists()) {
-      new File(cgLocation).delete();
-    }
+    Files.deleteIfExists(cgLocation);
     
     childJvm.init();
     String commandLine = childJvm.getCommandLine().toString();
@@ -135,7 +129,7 @@ public abstract class DynamicCallGraphTestBase extends WalaTestCase {
     Process x = Runtime.getRuntime().exec(commandLine);
     x.waitFor();
     
-    Assert.assertTrue("expected to create call graph", new File(cgLocation).exists());
+    Assert.assertTrue("expected to create call graph", Files.exists(cgLocation));
   }
    
   interface EdgesTest {
@@ -186,7 +180,7 @@ public abstract class DynamicCallGraphTestBase extends WalaTestCase {
  
   protected void check(CallGraph staticCG, EdgesTest test, Predicate<MethodReference> filter) throws IOException {
     int lines = 0;
-    try (final BufferedReader dynamicEdgesFile = new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(cgLocation))))) {
+    try (final BufferedReader dynamicEdgesFile = new BufferedReader(new InputStreamReader(new GZIPInputStream(Files.newInputStream(cgLocation))))) {
       String line;
       loop: while ((line = dynamicEdgesFile.readLine()) != null) {
         if (line.startsWith("call to") || line.startsWith("return from")) {
@@ -214,7 +208,7 @@ public abstract class DynamicCallGraphTestBase extends WalaTestCase {
           if (! filter.test(callerRef)) {
             continue loop;
           }
-          Assert.assertEquals(callerMethod, 1, nodes.size());
+          Assert.assertEquals(callerRef.toString(), 1, nodes.size());
           caller = nodes.iterator().next();
         }
         

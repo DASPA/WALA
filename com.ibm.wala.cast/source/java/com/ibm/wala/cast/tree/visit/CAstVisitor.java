@@ -184,6 +184,10 @@ public abstract class CAstVisitor<C extends CAstVisitor.Context> {
       break;
     }
     case CAstEntity.FUNCTION_ENTITY: {
+      for(CAstNode dflt : n.getArgumentDefaults()) {
+        visitor.visit(dflt, context, visitor);
+        visitor.visitScopedEntities(context.top(), context.top().getScopedEntities(dflt), context, visitor);
+      }
       C codeContext = visitor.makeCodeContext(context, n);
       if (visitor.visitFunctionEntity(n, context, codeContext, visitor))
         break;
@@ -871,6 +875,17 @@ public abstract class CAstVisitor<C extends CAstVisitor.Context> {
       break;
     }
 
+    case CAstNode.RETURN_WITHOUT_BRANCH: {
+      if (visitor.visitYield(n, context, visitor)) {
+  break;
+      }
+      for(int i = 0; i < n.getChildCount(); i++) {
+  visitor.visit(n.getChild(i), context, visitor);
+      }
+      visitor.leaveYield(n, context, visitor);
+      break;
+    }
+
     default: {
       if (!visitor.doVisit(n, context, visitor)) {
         System.err.println(("looking at unhandled " + n + "(" + NT + ")" + " of " + n.getClass()));
@@ -973,6 +988,17 @@ public abstract class CAstVisitor<C extends CAstVisitor.Context> {
       if (visitor.visitArrayLiteralAssign(n, v, a, context, visitor))
         return true;
       visitor.leaveArrayLiteralAssign(n, v, a, context, visitor);
+      break;
+    }
+
+    case CAstNode.OBJECT_LITERAL: {
+      assert assign;
+      for(int i = 1; i < n.getChildCount(); i+=2) {
+        visitor.visit(n.getChild(i), context, visitor);
+      }
+      if (visitor.visitObjectLiteralAssign(n, v, a, context, visitor))
+        return true;
+      visitor.leaveObjectLiteralAssign(n, v, a, context, visitor);
       break;
     }
 
@@ -1269,6 +1295,19 @@ public abstract class CAstVisitor<C extends CAstVisitor.Context> {
    * @param c a visitor-specific context
    */
   protected void leaveReturn(CAstNode n, C c, CAstVisitor<C> visitor) { visitor.leaveNode(n, c, visitor); }
+  /**
+   * Visit a Return node.
+   * @param n the node to process
+   * @param c a visitor-specific context
+   * @return true if no further processing is needed
+   */
+  protected boolean visitYield(CAstNode n, C c, CAstVisitor<C> visitor) { return visitor.visitNode(n, c, visitor); }
+  /**
+   * Leave a Return node.
+   * @param n the node to process
+   * @param c a visitor-specific context
+   */
+  protected void leaveYield(CAstNode n, C c, CAstVisitor<C> visitor) { visitor.leaveNode(n, c, visitor); }
   /**
    * Visit an Ifgoto node.
    * @param n the node to process
@@ -1585,6 +1624,23 @@ public abstract class CAstVisitor<C extends CAstVisitor.Context> {
    * @param c a visitor-specific context
    */
   protected void leaveArrayLiteralAssign(CAstNode n, CAstNode v, CAstNode a, C c, @SuppressWarnings("unused") CAstVisitor<C> visitor) { /* empty */ }
+  /**
+   * Visit an array literal Assignment node after visiting the RHS.
+   * @param n the LHS node to process
+   * @param v the RHS node to process
+   * @param a the assignment node to process
+   * @param c a visitor-specific context
+   * @return true if no further processing is needed
+   */
+  protected boolean visitObjectLiteralAssign(CAstNode n, CAstNode v, CAstNode a, C c, @SuppressWarnings("unused") CAstVisitor<C> visitor) { /* empty */ return false; }
+  /**
+   * Visit an array literal Assignment node after visiting the LHS.
+   * @param n the LHS node to process
+   * @param v the RHS node to process
+   * @param a the assignment node to process
+   * @param c a visitor-specific context
+   */
+  protected void leaveObjectLiteralAssign(CAstNode n, CAstNode v, CAstNode a, C c, @SuppressWarnings("unused") CAstVisitor<C> visitor) { /* empty */ }
   /**
    * Visit a Var Op/Assignment node after visiting the RHS.
    * @param n the LHS node to process

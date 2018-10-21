@@ -18,6 +18,7 @@ import java.util.jar.JarFile;
 import org.junit.Test;
 
 import com.ibm.wala.analysis.reflection.java7.MethodHandles;
+import com.ibm.wala.classLoader.Language;
 import com.ibm.wala.core.tests.shrike.DynamicCallGraphTestBase;
 import com.ibm.wala.ipa.callgraph.AnalysisCacheImpl;
 import com.ibm.wala.ipa.callgraph.AnalysisOptions;
@@ -27,7 +28,6 @@ import com.ibm.wala.ipa.callgraph.Entrypoint;
 import com.ibm.wala.ipa.callgraph.IAnalysisCacheView;
 import com.ibm.wala.ipa.callgraph.impl.Util;
 import com.ibm.wala.ipa.callgraph.propagation.SSAPropagationCallGraphBuilder;
-import com.ibm.wala.ipa.callgraph.propagation.cfa.DelegatingSSAContextInterpreter;
 import com.ibm.wala.ipa.cha.ClassHierarchy;
 import com.ibm.wala.ipa.cha.ClassHierarchyException;
 import com.ibm.wala.ipa.cha.ClassHierarchyFactory;
@@ -55,15 +55,17 @@ public class Java7CallGraphTest extends DynamicCallGraphTestBase {
     ClassHierarchy cha = ClassHierarchyFactory.make(scope);
     Iterable<Entrypoint> entrypoints = com.ibm.wala.ipa.callgraph.impl.Util.makeMainEntrypoints(scope, cha, "Lpack/ocamljavaMain");
     AnalysisOptions options = CallGraphTestUtil.makeAnalysisOptions(scope, entrypoints);
+    options.setUseConstantSpecificKeys(true);
     IAnalysisCacheView cache = new AnalysisCacheImpl();
     
-    SSAPropagationCallGraphBuilder builder = Util.makeZeroOneContainerCFABuilder(options, cache, cha, scope);
-    
-    builder.setContextSelector(new MethodHandles.ContextSelectorImpl(builder.getContextSelector()));
-    builder.setContextInterpreter(new DelegatingSSAContextInterpreter(new MethodHandles.ContextInterpreterImpl(), builder.getCFAContextInterpreter()));
+    SSAPropagationCallGraphBuilder builder = Util.makeZeroCFABuilder(Language.JAVA, options, cache, cha, scope);
+
+    MethodHandles.analyzeMethodHandles(options, builder);
     
     CallGraph cg = builder.makeCallGraph(options, null); 
     
+    System.err.println(cg);
+
     instrument(F.getAbsolutePath());
     run("pack.ocamljavaMain", null, args);
     

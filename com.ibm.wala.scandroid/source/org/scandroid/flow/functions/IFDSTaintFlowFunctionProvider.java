@@ -436,7 +436,7 @@ implements IFlowFunctionMap<BasicBlockInContext<E>> {
 		final SSAInvokeInstruction instruction = (SSAInvokeInstruction) src.getLastInstruction();
 		
 //		String signature = dest.getMethod().getSignature();
-//		if ( dest.getMethod().isSynthetic() ) { 
+//		if ( dest.getMethod().isWalaSynthetic() ) {
 //			System.out.println("Synthetic: "+signature);
 //		} else {
 //			System.err.println(signature);
@@ -448,14 +448,14 @@ implements IFlowFunctionMap<BasicBlockInContext<E>> {
 //			System.out.println("Call to system: "+signature);
 //		}
 		
-//		if (! dest.getMethod().isSynthetic() 
+//		if (! dest.getMethod().isWalaSynthetic()
 //		    && LoaderUtils.fromLoader(dest.getNode(), ClassLoaderReference.Primordial)) {
 //		    
 //            MyLogger.log(DEBUG,"Primordial and No Summary! (getCallFlowFunction) - " + dest.getMethod().getReference());
 //		}
 
 		final Map<CodeElement,CodeElement> parameterMap = HashMapFactory.make();
-		for (int i = 0; i < instruction.getNumberOfParameters(); i++) {
+		for (int i = 0; i < instruction.getNumberOfPositionalParameters(); i++) {
 			Set<CodeElement> elements = CodeElement.valueElements(instruction.getUse(i));
 			for(CodeElement e: elements) {
 				parameterMap.put(e, new LocalElement(i+1));

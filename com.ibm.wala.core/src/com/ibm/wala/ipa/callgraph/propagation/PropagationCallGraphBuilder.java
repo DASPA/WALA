@@ -711,7 +711,6 @@ public abstract class PropagationCallGraphBuilder implements CallGraphBuilder<In
    * @return the CGNode to which this particular call should dispatch.
    */
   protected CGNode getTargetForCall(CGNode caller, CallSiteReference site, IClass recv, InstanceKey iKey[]) {
-
     IMethod targetMethod = options.getMethodTargetSelector().getCalleeTarget(caller, site, recv);
 
     // this most likely indicates an exclusion at work; the target selector
@@ -721,7 +720,7 @@ public abstract class PropagationCallGraphBuilder implements CallGraphBuilder<In
     }
     Context targetContext = contextSelector.getCalleeTarget(caller, site, targetMethod, iKey);
     
-    if (targetContext instanceof IllegalArgumentExceptionContext) {
+    if (targetContext.isA(IllegalArgumentExceptionContext.class)) {
       return null;
     }
     try {

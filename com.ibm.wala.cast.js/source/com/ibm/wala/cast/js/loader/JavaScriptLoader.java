@@ -26,6 +26,9 @@ import com.ibm.wala.cast.ir.ssa.AstIsDefinedInstruction;
 import com.ibm.wala.cast.ir.ssa.AstLexicalAccess.Access;
 import com.ibm.wala.cast.ir.ssa.AstLexicalRead;
 import com.ibm.wala.cast.ir.ssa.AstLexicalWrite;
+import com.ibm.wala.cast.ir.ssa.AstPropertyRead;
+import com.ibm.wala.cast.ir.ssa.AstPropertyWrite;
+import com.ibm.wala.cast.ir.ssa.AstYieldInstruction;
 import com.ibm.wala.cast.ir.ssa.EachElementGetInstruction;
 import com.ibm.wala.cast.ir.ssa.EachElementHasNextInstruction;
 import com.ibm.wala.cast.ir.translator.AstTranslator.AstLexicalInformation;
@@ -34,6 +37,8 @@ import com.ibm.wala.cast.ir.translator.TranslatorToCAst;
 import com.ibm.wala.cast.ir.translator.TranslatorToIR;
 import com.ibm.wala.cast.js.analysis.typeInference.JSPrimitiveType;
 import com.ibm.wala.cast.js.ipa.callgraph.JSCallGraph.JSFakeRoot;
+import com.ibm.wala.cast.js.ipa.modref.JavaScriptModRef;
+import com.ibm.wala.cast.js.ipa.modref.JavaScriptModRef.JavaScriptRefVisitor;
 import com.ibm.wala.cast.js.ssa.JSInstructionFactory;
 import com.ibm.wala.cast.js.ssa.JavaScriptCheckReference;
 import com.ibm.wala.cast.js.ssa.JavaScriptInstanceOf;
@@ -65,9 +70,16 @@ import com.ibm.wala.classLoader.LanguageImpl;
 import com.ibm.wala.classLoader.ModuleEntry;
 import com.ibm.wala.classLoader.NewSiteReference;
 import com.ibm.wala.ipa.callgraph.AnalysisOptions;
+import com.ibm.wala.ipa.callgraph.CGNode;
 import com.ibm.wala.ipa.callgraph.IAnalysisCacheView;
 import com.ibm.wala.ipa.callgraph.impl.AbstractRootMethod;
+import com.ibm.wala.ipa.callgraph.propagation.InstanceKey;
+import com.ibm.wala.ipa.callgraph.propagation.PointerAnalysis;
+import com.ibm.wala.ipa.callgraph.propagation.PointerKey;
 import com.ibm.wala.ipa.cha.IClassHierarchy;
+import com.ibm.wala.ipa.modref.ExtendedHeapModel;
+import com.ibm.wala.ipa.modref.ModRef.ModVisitor;
+import com.ibm.wala.ipa.modref.ModRef.RefVisitor;
 import com.ibm.wala.shrikeBT.IBinaryOpInstruction.IOperator;
 import com.ibm.wala.shrikeBT.IComparisonInstruction.Operator;
 import com.ibm.wala.shrikeCT.BootstrapMethodsReader.BootstrapMethod;
@@ -241,12 +253,12 @@ public class JavaScriptLoader extends CAstAbstractModuleLoader {
         }
 
         @Override
-        public JavaScriptPropertyRead PropertyRead(int iindex, int result, int objectRef, int memberRef) {
+        public AstPropertyRead PropertyRead(int iindex, int result, int objectRef, int memberRef) {
           return new JavaScriptPropertyRead(iindex, result, objectRef, memberRef);
         }
 
         @Override
-        public JavaScriptPropertyWrite PropertyWrite(int iindex, int objectRef, int memberRef, int value) {
+        public AstPropertyWrite PropertyWrite(int iindex, int objectRef, int memberRef, int value) {
           return new JavaScriptPropertyWrite(iindex, objectRef, memberRef, value);
         }
 
@@ -295,6 +307,11 @@ public class JavaScriptLoader extends CAstAbstractModuleLoader {
         @Override
         public AstEchoInstruction EchoInstruction(int iindex, int[] rvals) {
           return new AstEchoInstruction(iindex, rvals);
+        }
+
+        @Override
+        public AstYieldInstruction YieldInstruction(int iindex, int[] rvals) {
+          return new AstYieldInstruction(iindex, rvals);
         }
 
         @Override
@@ -665,6 +682,18 @@ public class JavaScriptLoader extends CAstAbstractModuleLoader {
     @Override
     public AbstractRootMethod getFakeRootMethod(IClassHierarchy cha, AnalysisOptions options, IAnalysisCacheView cache) {
       return new JSFakeRoot(cha, options, cache);
+    }
+
+    @Override
+    public <T extends InstanceKey> RefVisitor<T, ? extends ExtendedHeapModel> makeRefVisitor(CGNode n,
+        Collection<PointerKey> result, PointerAnalysis<T> pa, ExtendedHeapModel h) {
+      return new JavaScriptRefVisitor<>(n, result, pa, h);
+    }
+
+    @Override
+    public <T extends InstanceKey> ModVisitor<T, ? extends ExtendedHeapModel> makeModVisitor(CGNode n, Collection<PointerKey> result,
+        PointerAnalysis<T> pa, ExtendedHeapModel h, boolean ignoreAllocHeapDefs) {
+      return new JavaScriptModRef.JavaScriptModVisitor<>(n, result, h, pa);
     }
 
   };

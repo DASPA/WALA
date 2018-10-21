@@ -1112,7 +1112,7 @@ public abstract class SSAPropagationCallGraphBuilder extends PropagationCallGrap
       if (DEBUG) {
         System.err.println("visitInvoke: " + instruction);
       }
-
+      
       PointerKey uniqueCatch = null;
       if (hasUniqueCatchBlock(instruction, ir)) {
         uniqueCatch = getBuilder().getUniqueCatchKey(instruction, ir, node);
@@ -1617,7 +1617,7 @@ public abstract class SSAPropagationCallGraphBuilder extends PropagationCallGrap
     // }
     // } else {
     // generate contraints from parameter passing
-    int nUses = instruction.getNumberOfParameters();
+    int nUses = instruction.getNumberOfPositionalParameters();
     int nExpected = target.getMethod().getNumberOfParameters();
 
     /*
@@ -1635,7 +1635,7 @@ public abstract class SSAPropagationCallGraphBuilder extends PropagationCallGrap
     // TODO: we need much more precise filters than cones in order to handle
     // the various types of dispatch logic. We need a filter that expresses
     // "the set of types s.t. x.foo resolves to y.foo."
-    for (int i = 0; i < instruction.getNumberOfParameters(); i++) {
+    for (int i = 0; i < instruction.getNumberOfPositionalParameters(); i++) {
       if (target.getMethod().getParameterType(i).isReferenceType()) {
         PointerKey formal = getTargetPointerKey(target, i);
         if (constParams != null && constParams[i] != null) {
@@ -1731,12 +1731,14 @@ public abstract class SSAPropagationCallGraphBuilder extends PropagationCallGrap
         IntSet currentObjs = rhs[rhsIndex].getValue();
         if (currentObjs != null) {
           final IntSet oldObjs = previousPtrs[rhsIndex];
-          currentObjs.foreachExcluding(oldObjs, x -> new CrossProductRec(constParams, call, node,
+ 
+         currentObjs.foreachExcluding(oldObjs, x -> new CrossProductRec(constParams, call, node,
               v -> {
                 IClass recv = null;
                 if (call.getCallSite().isDispatch()) {
                   recv = v[0].getConcreteType();
                 }
+
                 CGNode target = getTargetForCall(node, call.getCallSite(), recv, v);
                 if (target != null) {                        
                   changed.b = true;

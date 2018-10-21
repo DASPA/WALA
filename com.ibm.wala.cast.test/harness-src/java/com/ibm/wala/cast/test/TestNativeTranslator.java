@@ -142,6 +142,18 @@ public class TestNativeTranslator {
           // TODO Auto-generated method stub
           return null;
         }
+
+        @Override
+        public Position getPosition(int arg) {
+          // TODO Auto-generated method stub
+          return null;
+        }
+
+        @Override
+        public Position getNamePosition() {
+          // TODO Auto-generated method stub
+          return null;
+        }
       };
     }
   }

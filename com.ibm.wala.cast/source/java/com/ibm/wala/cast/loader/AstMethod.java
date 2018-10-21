@@ -46,10 +46,16 @@ public abstract class AstMethod implements IMethod {
 
     Position getCodeBodyPosition();
 
+    Position getCodeNamePosition();
+
     Position getInstructionPosition(int instructionOffset);
 
     String[][] getSourceNamesForValues();
 
+    Position getOperandPosition(int instructionOffset, int operand);
+
+    Position getParameterPosition(int param);
+    
   }
 
   /**
@@ -264,6 +270,11 @@ public abstract class AstMethod implements IMethod {
   }
 
   @Override
+  public boolean isWalaSynthetic() {
+    return false;
+  }
+
+  @Override
   public boolean isSynthetic() {
     return false;
   }
@@ -338,6 +349,10 @@ public abstract class AstMethod implements IMethod {
 
   public Position getSourcePosition() {
     return debugInfo.getCodeBodyPosition();
+  }
+
+  public Position getParameterPosition(int paramIndex) {
+    return debugInfo.getParameterPosition(paramIndex);
   }
 
   @Override

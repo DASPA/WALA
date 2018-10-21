@@ -88,13 +88,59 @@
      <delete dir="${temp.folder}"/>
    </target>
 
-	<target name="copyJars" depends="fetchJLex,fetchJavaCup,fetchBcel,buildOCamlHelloHash">
+	<target name="copyJars" depends="fetchJLex,fetchJavaCup,fetchBcel,buildOCamlHelloHash,compileKawaTest,compileKawaChess">
 	  <copy todir="${plugin.destination}/bin">
 	  	<fileset dir="${plugin.destination}" includes="*.jar" />
 	  </copy>
 	</target>
 
+	
+	<target name="KawaChessPresent" depends="init">
+          <available file="${plugin.destination}/kawa-chess/chess.scm" property="kawa.chess.present"/>
+	</target>
 
+	<target name="getKawaChess" depends="KawaChessPresent" unless="kawa.chess.present" >
+	  <exec executable="git"
+		dir="${plugin.destination}">
+	    <arg value="clone"/>
+	    <arg value="http://github.com/ttu-fpclub/kawa-chess" />
+	  </exec>
+	</target>
+
+	
+	<target name="KawaPresent" depends="init">
+          <available file="${plugin.destination}/kawa-3.0/lib/kawa.jar" property="kawa.present"/>
+	</target>
+	
+	<target name="fetchKawa" depends="KawaPresent" unless="kawa.present">
+	  <delete dir="${temp.folder}"/>
+	  <mkdir dir="${temp.folder}"/>
+	  <exec executable="wget" dir="${temp.folder}">
+	    <arg line="ftp://ftp.gnu.org/pub/gnu/kawa/kawa-3.0.zip"/>
+	  </exec>	
+	  <unzip src="${temp.folder}/kawa-3.0.zip" dest="${plugin.destination}"/>
+	  <copy file="${plugin.destination}/kawa-3.0/lib/kawa.jar" todir="${plugin.destination}" failonerror="false" overwrite="false"/>
+	  <delete dir="${temp.folder}"/>
+	</target>
+	
+	<target name="compileKawaTest" depends="fetchKawa">
+	  <exec executable="java" dir="${plugin.destination}/kawasrc">
+	    <arg line="-cp ${plugin.destination}/kawa-3.0/lib/kawa.jar kawa.repl --main -C test.scm"/>
+	  </exec>	
+	  <jar destfile="${plugin.destination}/kawatest.jar" basedir="${plugin.destination}/kawasrc" />
+	</target>
+	
+	<target name="compileKawaChess" depends="fetchKawa,getKawaChess">
+	  <exec executable="java" dir="${plugin.destination}/kawa-chess">
+	    <arg line="-cp ${plugin.destination}/kawa-3.0/lib/kawa.jar kawa.repl -C img.scm pos.scm chess.scm gui.scm"/>
+	  </exec>
+	  <exec executable="java" dir="${plugin.destination}/kawa-chess">
+	    <arg line="-cp ${plugin.destination}/kawa-3.0/lib/kawa.jar kawa.repl --main -C main.scm"/>
+	  </exec>	
+	  <jar destfile="${plugin.destination}/kawachess.jar" basedir="${plugin.destination}/kawa-chess" />
+	</target>
+
+	
 	<target name="init" depends="properties">
 		<condition property="pluginTemp" value="${buildTempFolder}/plugins">
 			<isset property="buildTempFolder"/>

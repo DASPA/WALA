@@ -28,8 +28,6 @@ import com.ibm.wala.cast.js.ssa.JSInstructionVisitor;
 import com.ibm.wala.cast.js.ssa.JavaScriptCheckReference;
 import com.ibm.wala.cast.js.ssa.JavaScriptInstanceOf;
 import com.ibm.wala.cast.js.ssa.JavaScriptInvoke;
-import com.ibm.wala.cast.js.ssa.JavaScriptPropertyRead;
-import com.ibm.wala.cast.js.ssa.JavaScriptPropertyWrite;
 import com.ibm.wala.cast.js.ssa.JavaScriptTypeOfInstruction;
 import com.ibm.wala.cast.js.ssa.JavaScriptWithRegion;
 import com.ibm.wala.cast.js.ssa.PrototypeLookup;
@@ -104,7 +102,7 @@ import com.ibm.wala.util.strings.Atom;
  * {@link JSImplicitPointsToSetVisitor#visitAstGlobalRead(AstGlobalRead)}.
  * Finally, we need to represent direct flow of the global object to handle
  * receiver argument semantics (see
- * {@link org.mozilla.javascript.RhinoToAstTranslator}). To do so, we create a
+ * {@link com.ibm.wala.cast.js.translator.RhinoToAstTranslator}). To do so, we create a
  * reference to a global named {@link #GLOBAL_OBJ_VAR_NAME}, which is handled
  * specially in {@link JSConstraintVisitor#visitAstGlobalRead(AstGlobalRead)}.
  */
@@ -263,16 +261,6 @@ public class JSSSAPropagationCallGraphBuilder extends AstSSAPropagationCallGraph
     }
 
     @Override
-    public void visitJavaScriptPropertyRead(JavaScriptPropertyRead instruction) {
-      bingo = true;
-    }
-
-    @Override
-    public void visitJavaScriptPropertyWrite(JavaScriptPropertyWrite instruction) {
-      bingo = true;
-    }
-
-    @Override
     public void visitTypeOf(JavaScriptTypeOfInstruction inst) {
       bingo = true;
     }
@@ -335,16 +323,6 @@ public class JSSSAPropagationCallGraphBuilder extends AstSSAPropagationCallGraph
 
       @Override
       public void visitTypeOf(JavaScriptTypeOfInstruction instruction) {
-
-      }
-
-      @Override
-      public void visitJavaScriptPropertyRead(JavaScriptPropertyRead instruction) {
-
-      }
-
-      @Override
-      public void visitJavaScriptPropertyWrite(JavaScriptPropertyWrite instruction) {
 
       }
 
@@ -541,36 +519,6 @@ public class JSSSAPropagationCallGraphBuilder extends AstSSAPropagationCallGraph
     @Override
     public void visitBinaryOp(final SSABinaryOpInstruction instruction) {
       handleBinaryOp(instruction, node, symbolTable, du);
-    }
-
-    @Override
-    public void visitJavaScriptPropertyRead(JavaScriptPropertyRead instruction) {
-      if (AstSSAPropagationCallGraphBuilder.DEBUG_PROPERTIES) {
-        Position instructionPosition = getInstructionPosition(instruction);
-        if (instructionPosition != null) {
-          System.err.println("processing read instruction " + instruction + ", position " + instructionPosition);
-        }
-      }
-      newFieldRead(node, instruction.getUse(0), instruction.getUse(1), instruction.getDef(0));
-    }
-
-    private Position getInstructionPosition(SSAInstruction instruction) {
-      IMethod method = node.getMethod();
-      if (method instanceof AstMethod) {
-        return ((AstMethod) method).getSourcePosition(instruction.iindex);
-      }
-      return null;
-    }
-
-    @Override
-    public void visitJavaScriptPropertyWrite(JavaScriptPropertyWrite instruction) {
-      if (AstSSAPropagationCallGraphBuilder.DEBUG_PROPERTIES) {
-        Position instructionPosition = getInstructionPosition(instruction);
-        if (instructionPosition != null) {
-          System.err.println("processing write instruction " + instruction + ", position " + instructionPosition);
-        }
-      }
-      newFieldWrite(node, instruction.getUse(0), instruction.getUse(1), instruction.getUse(2));
     }
 
     @Override
@@ -1035,7 +983,7 @@ public class JSSSAPropagationCallGraphBuilder extends AstSSAPropagationCallGraph
     }
 
     int paramCount = targetST.getParameterValueNumbers().length;
-    int argCount = instruction.getNumberOfParameters();
+    int argCount = instruction.getNumberOfPositionalParameters();
     
     // the first two arguments are the function object and the receiver, neither of which
     // should become part of the arguments array

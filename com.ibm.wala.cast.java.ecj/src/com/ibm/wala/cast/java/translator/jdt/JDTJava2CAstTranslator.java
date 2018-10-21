@@ -274,7 +274,12 @@ public abstract class JDTJava2CAstTranslator<T extends Position> {
   protected final class ClassEntity implements CAstEntity {
     // TAGALONG (not static, will keep reference to ast, fIdentityMapper, etc)
 
-    private final String fName;
+    @Override
+	public Position getPosition(int arg) {
+		return null;
+	}
+
+	private final String fName;
 
     private final Collection<CAstQualifier> fQuals;
 
@@ -284,8 +289,11 @@ public abstract class JDTJava2CAstTranslator<T extends Position> {
 
     private final T fSourcePosition;
 
+    private final T fNamePos;
+
     public ClassEntity(ITypeBinding jdtType, String name, Collection<CAstQualifier> quals, Collection<CAstEntity> entities,
-        T pos) {
+        T pos, T namePos) {
+      fNamePos = namePos;
       fName = name;
       fQuals = quals;
       fEntities = entities;
@@ -391,6 +399,11 @@ public abstract class JDTJava2CAstTranslator<T extends Position> {
       return fTypeDict.new JdtJavaType(fJdtType);
     }
 
+	@Override
+	public Position getNamePosition() {
+		return fNamePos;
+	}
+
   }
 
   private static boolean isInterface(AbstractTypeDeclaration decl) {
@@ -400,7 +413,7 @@ public abstract class JDTJava2CAstTranslator<T extends Position> {
   
   private CAstEntity visitTypeDecl(AbstractTypeDeclaration n, WalkContext context) {
     return createClassDeclaration(n, n.bodyDeclarations(), null, n.resolveBinding(), n.getName().getIdentifier(), n.getModifiers(),
-        isInterface(n), n instanceof AnnotationTypeDeclaration, context);
+        isInterface(n), n instanceof AnnotationTypeDeclaration, context, makePosition(n.getName()));
   }
 
   /**
@@ -411,10 +424,11 @@ public abstract class JDTJava2CAstTranslator<T extends Position> {
    * @param typeBinding
    * @param name Used in creating default constructor, and passed into new ClassEntity()
    * @param context
+ * @param namePos 
    */
   private CAstEntity createClassDeclaration(ASTNode n, List<BodyDeclaration> bodyDecls,
       List<EnumConstantDeclaration> enumConstants, ITypeBinding typeBinding, String name, int modifiers, 
-      boolean isInterface, boolean isAnnotation, WalkContext context) {
+      boolean isInterface, boolean isAnnotation, WalkContext context, T namePos) {
     final List<CAstEntity> memberEntities = new ArrayList<>();
 
     // find and collect all initializers (type Initializer) and field initializers (type VariableDeclarationFragment).
@@ -460,7 +474,7 @@ public abstract class JDTJava2CAstTranslator<T extends Position> {
           IVariableBinding fieldBinding = fieldFrag.resolveBinding();
 		memberEntities.add(new FieldEntity(fieldFrag.getName().getIdentifier(), fieldBinding.getType(), quals,
               makePosition(fieldFrag.getStartPosition(), fieldFrag.getStartPosition() + fieldFrag.getLength()),
-              handleAnnotations(fieldBinding)));
+              handleAnnotations(fieldBinding), makePosition(fieldFrag.getName())));
         }
       } else if (decl instanceof Initializer) {
         // Initializers are inserted into constructors when making constructors.
@@ -521,12 +535,12 @@ public abstract class JDTJava2CAstTranslator<T extends Position> {
 
     Collection<CAstQualifier> quals = JDT2CAstUtils.mapModifiersToQualifiers(modifiers, isInterface, isAnnotation);
 
-    return new ClassEntity(typeBinding, name, quals, memberEntities, makePosition(n));
+    return new ClassEntity(typeBinding, name, quals, memberEntities, makePosition(n), namePos);
   }
 
   private CAstEntity visit(AnonymousClassDeclaration n, WalkContext context) {
     return createClassDeclaration(n, n.bodyDeclarations(), null, n.resolveBinding(),
-        JDT2CAstUtils.anonTypeName(n.resolveBinding()), 0 /* no modifiers */, false, false, context);
+        JDT2CAstUtils.anonTypeName(n.resolveBinding()), 0 /* no modifiers */, false, false, context, null);
   }
 
   private CAstNode visit(TypeDeclarationStatement n, WalkContext context) {
@@ -1031,7 +1045,13 @@ public abstract class JDTJava2CAstTranslator<T extends Position> {
       return new CAstType.Method() {
         private Collection<CAstType> fExceptionTypes = null;
 
+        
         @Override
+		public boolean isStatic() {
+			return getQualifiers().contains(CAstQualifier.STATIC);
+		}
+
+		@Override
         public CAstType getReturnType() {
           if (fReturnType != null)
             return fTypeDict.getCAstTypeFor(fReturnType);
@@ -1088,6 +1108,22 @@ public abstract class JDTJava2CAstTranslator<T extends Position> {
         }
       };
     }
+
+	@Override
+	public Position getPosition(int arg) {
+		// TODO Auto-generated method stub
+		SingleVariableDeclaration p = (SingleVariableDeclaration) fDecl.parameters().get(arg);
+		return makePosition(p);
+	}
+
+	@Override
+	public Position getNamePosition() {
+		if (fDecl == null) {
+			return null;
+		} else {
+			return makePosition(fDecl);
+		}
+	}
   }
 
   // ////////////////////////////////////
@@ -1140,13 +1176,16 @@ public abstract class JDTJava2CAstTranslator<T extends Position> {
 
     private final T position;
 
+    private final T namePos;
+
     private final Set<CAstAnnotation> annotations;
 
-    private FieldEntity(String name, ITypeBinding type, Collection<CAstQualifier> quals, T position, Set<CAstAnnotation> annotations) {
+    private FieldEntity(String name, ITypeBinding type, Collection<CAstQualifier> quals, T position, Set<CAstAnnotation> annotations, T namePos) {
       super();
       this.type = type;
       this.quals = quals;
       this.name = name;
+      this.namePos = namePos;
       this.position = position;
       this.annotations = annotations;
     }
@@ -1239,6 +1278,19 @@ public abstract class JDTJava2CAstTranslator<T extends Position> {
     public CAstType getType() {
       return fTypeDict.getCAstTypeFor(type);
     }
+
+
+	@Override
+	public Position getPosition(int arg) {
+		return namePos;
+	}
+
+
+	@Override
+	public Position getNamePosition() {
+		// TODO Auto-generated method stub
+		return null;
+	}
   }
 
   // /////////////////////////////////////
@@ -2305,7 +2357,7 @@ public abstract class JDTJava2CAstTranslator<T extends Position> {
   private CAstNode getSwitchCaseConstant(SwitchCase n, WalkContext context) {
     // TODO: enums
     Expression expr = n.getExpression();
-    Object constant = (expr == null) ? new Integer(0) : expr.resolveConstantExpressionValue(); // default case label of
+    Object constant = (expr == null) ? Integer.valueOf(0) : expr.resolveConstantExpressionValue(); // default case label of
     // "0" (what polyglot
     // does). we also set
     // SWITCH_DEFAULT
@@ -2562,7 +2614,7 @@ public abstract class JDTJava2CAstTranslator<T extends Position> {
     /*------ indexDecl --------- int tmpindex = 0 ------*/
     final String tmpIndexName = "for temp index";
     CAstNode indexDeclNode = makeNode(context, fFactory, n, CAstNode.DECL_STMT, fFactory.makeConstant(new InternalCAstSymbol(
-        tmpIndexName, fTypeDict.getCAstTypeFor(ast.resolveWellKnownType("int")), true)), fFactory.makeConstant(new Integer(0)));
+        tmpIndexName, fTypeDict.getCAstTypeFor(ast.resolveWellKnownType("int")), true)), fFactory.makeConstant(Integer.valueOf(0)));
 
     /*------ cond ------------- tmpindex < tmparray.length ------*/
     CAstNode tmpArrayLengthNode = makeNode(context, fFactory, n, CAstNode.ARRAY_LENGTH, makeNode(context, fFactory, n,
@@ -3016,6 +3068,16 @@ public abstract class JDTJava2CAstTranslator<T extends Position> {
       Assertions.UNREACHABLE("CompilationUnitEntity.getType()");
       return null;
     }
+
+	@Override
+	public Position getPosition(int arg) {
+		return null;
+	}
+
+	@Override
+	public Position getNamePosition() {
+		return null;
+	}
   }
 
   // /////////////////////////////
@@ -3311,7 +3373,7 @@ public abstract class JDTJava2CAstTranslator<T extends Position> {
    */
   private CAstEntity visit(EnumConstantDeclaration decl, WalkContext context) {
     return new FieldEntity(decl.getName().getIdentifier(), decl.resolveVariable().getType(), enumQuals, makePosition(decl
-        .getStartPosition(), decl.getStartPosition() + decl.getLength()), null);
+        .getStartPosition(), decl.getStartPosition() + decl.getLength()), null, makePosition(decl.getName()));
   }
 
   /**
@@ -3460,10 +3522,9 @@ public abstract class JDTJava2CAstTranslator<T extends Position> {
   }
 
   private CAstEntity visit(EnumDeclaration n, WalkContext context) {
-
     // JDT contains correct type info / class / subclass info for the enum
     return createClassDeclaration(n, n.bodyDeclarations(), n.enumConstants(), n.resolveBinding(), n.getName().getIdentifier(), n
-        .resolveBinding().getModifiers(), false, false, context);
+        .resolveBinding().getModifiers(), false, false, context, makePosition(n.getName()));
   }
 
   /**

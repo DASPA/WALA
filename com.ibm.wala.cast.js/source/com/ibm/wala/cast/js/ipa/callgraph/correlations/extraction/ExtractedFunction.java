@@ -186,4 +186,14 @@ class ExtractedFunction implements CAstEntity {
 	public String toString() {
 		return "<JS function " + name + ">";
 	}
+
+  @Override
+  public Position getPosition(int arg) {
+    return null;
+  }
+
+  @Override
+  public Position getNamePosition() {
+    return null;
+  }
 }
