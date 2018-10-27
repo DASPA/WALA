@@ -46,11 +46,11 @@ comLogicalhackingArtifactsPassword=<PASSWORD>
 
 ### Preparation
 
-Before publishing new artifacts to the artifacts repository, please update the version identifier in the file  `build.gradle` by removing the second `SNAPSHOT`
-and updating the `<VERSION>` identifier.
+Before publishing new artifacts to the artifacts repository, please update the version identifier in the file  `build.gradle` by removing the `SNAPSHOT` postfix
+and updating the `<WALAVERSION>` identifier.
 
 ``` gradle
-version '1.5.1-SNAPSHOT-DASCA-<VERSION>-SNAPSHOT'
+version '<WALAVERSION>.[R|S].DASCA.<DASCAVERSION>'
 ```
 
 with the version that should be published. Next, commit your changes and tag the
@@ -64,7 +64,7 @@ git tag -s "<VERSION>" -m "Tagging version <VERSION>."
 Finally, mark the development version by appending `-SNAPSHOT`
 
 ``` gradle
-version '1.5.1-SNAPSHOT-DASCA-<VERSION>-SNAPSHOT'
+version '<WALAVERSION>.[R|S].DASCA.<DASCAVERSION>-SNAPSHOT'
 ```
 
 and commit your changes:
