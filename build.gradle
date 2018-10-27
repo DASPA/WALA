@@ -86,7 +86,7 @@ subprojects { subproject ->
         publishing {
             repositories {
                 maven {
-                    url = "sftp://artifacts.logicalhacking.com:22/home/brucker/www/artifacts.logicalhacking.com/htdocs/maven2/"
+                    url = "sftp://artifacts.logicalhacking.com:22/home/brucker/www/artifacts.logicalhacking.com/htdocs/maven3/"
                     credentials {
                         username comLogicalhackingArtifactsUser
                         password comLogicalhackingArtifactsPassword
