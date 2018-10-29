@@ -52,7 +52,7 @@ p2AsMaven {
 //
 
 group name
-version '1.5.1.S.DASCA.1.0.0'
+version '1.5.1.S.DASCA.1.0.0-SNAPSHOT'
 
 subprojects { subproject ->
 	// skip generic Java setup for the few projects that have no Java code whatsoever
